@@ -3,6 +3,7 @@ package pl.edu.agh.transformations;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.generic.ClassGen;
+import org.apache.bcel.generic.MethodGen;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -15,7 +16,13 @@ public class BytecodeModifier {
     public void modifyBytecode(String classPath, String className) throws IOException {
         JavaClass analyzedClass = new ClassParser(classPath + "\\" + className + CLASS_SUFFIX).parse();
         ClassGen classGen = new ClassGen(analyzedClass);
+
+        //TODO main() is on the position 1 (default constructor is on position 0),
+        //TODO to change other methods I need to change the way of calling TransformUtils
+        MethodGen methodGen = new MethodGen(classGen.getMethodAt(1), classGen.getClassName(), classGen.getConstantPool());
+
         TransformUtils.addThreadPool(classGen);
+        TransformUtils.addTaskPool(classGen, methodGen);
         saveModifiedClass(classPath, className, classGen);
     }
 
