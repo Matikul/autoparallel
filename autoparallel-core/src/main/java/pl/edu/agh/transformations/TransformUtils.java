@@ -10,8 +10,9 @@ import java.util.concurrent.ExecutorService;
 
 public class TransformUtils {
 
-    /*
-    Method that adds static field with thread pool to the class
+    /**
+     * Method that adds static field with thread pool to the class
+     * @param classGen
      */
     static void addThreadPool(ClassGen classGen) {
         ConstantPoolGen constantPoolGen = classGen.getConstantPool();
@@ -66,7 +67,11 @@ public class TransformUtils {
         classGen.addMethod(methodGen.getMethod());
     }
 
-    //adds List<Callable> of tasks to method
+    /**
+     * adds List<Callable> of tasks to method
+     * @param classGen
+     * @param methodGen
+     */
     static void addTaskPool(ClassGen classGen, MethodGen methodGen) {
         ConstantPoolGen constantPoolGen = classGen.getConstantPool();
         InstructionFactory instructionFactory = new InstructionFactory(classGen, constantPoolGen);
@@ -78,6 +83,35 @@ public class TransformUtils {
         appendedInstructions.append(instructionFactory.createNew(ObjectType.getInstance("java.util.List")));
         appendedInstructions.append(InstructionFactory.createDup(1));
         appendedInstructions.append(instructionFactory.createInvoke("java.util.ArrayList<Callable<Integer>>",
+                                                                    "<init>",
+                                                                    Type.getType((new ArrayList<Callable<Integer>>()).getClass()),
+                                                                    new Type[]{},
+                                                                    Const.INVOKESPECIAL));
+        InstructionList currentList = methodGen.getInstructionList();
+        appendedInstructions.append(currentList);
+        methodGen.setInstructionList(appendedInstructions);
+        methodGen.setMaxStack();
+        methodGen.setMaxLocals();
+        classGen.removeMethod(methodGen.getMethod());
+        classGen.addMethod(methodGen.getMethod());
+    }
+
+    /**
+     * adds list of Futures to store partial results of parallelized method
+     * @param classGen
+     * @param methodGen
+     */
+    static void addFutureResultsList(ClassGen classGen, MethodGen methodGen) {
+        ConstantPoolGen constantPoolGen = classGen.getConstantPool();
+        InstructionFactory instructionFactory = new InstructionFactory(classGen, constantPoolGen);
+        InstructionList appendedInstructions = new InstructionList();
+        methodGen.addLocalVariable(Constants.RESULTS_POOL_NAME,
+                                   Type.getType((new ArrayList<Callable<Integer>>()).getClass()),
+                                   null,
+                                   null);
+        appendedInstructions.append(instructionFactory.createNew(ObjectType.getInstance("java.util.List")));
+        appendedInstructions.append(InstructionFactory.createDup(1));
+        appendedInstructions.append(instructionFactory.createInvoke("java.util.ArrayList<Future<Integer>>",
                                                                     "<init>",
                                                                     Type.getType((new ArrayList<Callable<Integer>>()).getClass()),
                                                                     new Type[]{},

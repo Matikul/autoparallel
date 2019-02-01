@@ -23,6 +23,7 @@ public class BytecodeModifier {
 
         TransformUtils.addThreadPool(classGen);
         TransformUtils.addTaskPool(classGen, methodGen);
+        TransformUtils.addFutureResultsList(classGen, methodGen);
         saveModifiedClass(classPath, className, classGen);
     }
 
