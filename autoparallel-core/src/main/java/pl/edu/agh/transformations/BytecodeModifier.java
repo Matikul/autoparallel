@@ -1,5 +1,6 @@
 package pl.edu.agh.transformations;
 
+import org.apache.bcel.Const;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.generic.ClassGen;
@@ -7,24 +8,39 @@ import org.apache.bcel.generic.MethodGen;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class BytecodeModifier {
 
     public static final String MODIFICATION_SUFFIX = "_modified";
     private static final String CLASS_SUFFIX = ".class";
+    private static final String JAVA_SUFFIX = ".java";
 
     public void modifyBytecode(String classPath, String className) throws IOException {
         JavaClass analyzedClass = new ClassParser(classPath + "\\" + className + CLASS_SUFFIX).parse();
-        ClassGen classGen = new ClassGen(analyzedClass);
+        ClassGen oldClass = new ClassGen(analyzedClass);
 
+        ClassGen modifiedClass = new ClassGen(analyzedClass.getPackageName() + className + MODIFICATION_SUFFIX,
+                                              Object.class.getName(),
+                                              className + MODIFICATION_SUFFIX + JAVA_SUFFIX,
+                                              Const.ACC_PUBLIC,
+                                              null,
+                                              oldClass.getConstantPool());
         //TODO main() is on the position 1 (default constructor is on position 0),
         //TODO to change other methods I need to change the way of calling TransformUtils
-        MethodGen methodGen = new MethodGen(classGen.getMethodAt(1), classGen.getClassName(), classGen.getConstantPool());
+        copyMethods(analyzedClass, modifiedClass);
 
-        TransformUtils.addThreadPool(classGen);
-        TransformUtils.addTaskPool(classGen, methodGen);
-        TransformUtils.addFutureResultsList(classGen, methodGen);
-        saveModifiedClass(classPath, className, classGen);
+        MethodGen methodGen = new MethodGen(modifiedClass.getMethodAt(1), modifiedClass.getClassName(), modifiedClass.getConstantPool());
+
+        TransformUtils.addThreadPool(modifiedClass);
+        TransformUtils.addTaskPool(modifiedClass, methodGen);
+        TransformUtils.addFutureResultsList(modifiedClass, methodGen);
+        saveModifiedClass(classPath, className, modifiedClass);
+    }
+
+    private void copyMethods(JavaClass oldClass, ClassGen newClass) {
+        Arrays.stream(oldClass.getMethods())
+                .forEach(newClass::addMethod);
     }
 
     private void saveModifiedClass(String classPath, String className, ClassGen classGen) {
