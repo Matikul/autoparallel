@@ -12,6 +12,7 @@ public class TransformUtils {
 
     /**
      * Method that adds static field with thread pool to the class
+     *
      * @param classGen
      */
     static void addThreadPool(ClassGen classGen) {
@@ -70,6 +71,7 @@ public class TransformUtils {
 
     /**
      * adds List<Callable> of tasks to method
+     *
      * @param classGen
      * @param methodGen
      */
@@ -108,6 +110,7 @@ public class TransformUtils {
 
     /**
      * adds list of Futures to store partial results of parallelized method
+     *
      * @param classGen
      * @param methodGen
      */
@@ -139,14 +142,16 @@ public class TransformUtils {
 
     public static void copyLoopToMethod(ClassGen classGen, MethodGen methodGen) {
         InstructionList subTaskInstructionList = getSubtaskInstructions(methodGen);
+        subTaskInstructionList.append(InstructionFactory.createReturn(methodGen.getReturnType()));
         MethodGen subTaskMethod = new MethodGen(Const.ACC_PRIVATE,
-                                                Type.getType((new int[0]).getClass()),
-                                                new Type[] {Type.INT, Type.INT},
-                                                new String[] {Constants.START_INDEX_VARIABLE_NAME, Constants.END_INDEX_VARIABLE_NAME},
+                                                methodGen.getReturnType(),
+                                                new Type[]{Type.INT, Type.INT},
+                                                new String[]{Constants.START_INDEX_VARIABLE_NAME, Constants.END_INDEX_VARIABLE_NAME},
                                                 Constants.SUBTASK_METHOD_NAME,
                                                 classGen.getClassName(),
                                                 subTaskInstructionList,
                                                 classGen.getConstantPool());
+        updateBranchInstructions(subTaskInstructionList);
         subTaskMethod.setMaxLocals();
         subTaskMethod.setMaxStack();
         classGen.addMethod(subTaskMethod.getMethod());
@@ -155,8 +160,34 @@ public class TransformUtils {
     private static InstructionList getSubtaskInstructions(MethodGen methodGen) {
         InstructionHandle[] loopInstructions = LoopUtils.getForLoop(methodGen);
         InstructionList subTaskInstructionList = new InstructionList();
-        Arrays.stream(loopInstructions)
-                .forEach(instr -> subTaskInstructionList.append(instr, instr.getInstruction()));
+        for (InstructionHandle instr : loopInstructions) {
+            if (instr instanceof BranchHandle) {
+                BranchHandle branch = (BranchHandle) instr;
+                subTaskInstructionList.append((BranchInstruction) branch.getInstruction());
+            } else {
+                subTaskInstructionList.append(instr.getInstruction());
+            }
+        }
         return subTaskInstructionList;
+    }
+
+    private static void updateBranchInstructions(InstructionList instructions) {
+        InstructionHandle returnHandle = instructions.getInstructionHandles()[instructions.getInstructionHandles().length - 1];
+        InstructionHandle loopBeginning = instructions.getInstructionHandles()[2];
+        Arrays.stream(instructions.getInstructionHandles())
+                .filter(BranchHandle.class::isInstance)
+                .forEach(instr -> adjustInstructionTarget(instr, returnHandle, loopBeginning));
+    }
+
+    private static void adjustInstructionTarget(InstructionHandle instruction,
+                                                InstructionHandle returnHandle,
+                                                InstructionHandle loopBeginning) {
+        short opCode = instruction.getInstruction().getOpcode();
+        BranchHandle branchHandle = (BranchHandle) instruction;
+        if (opCode == Const.GOTO) {
+            branchHandle.setTarget(loopBeginning);
+        } else {
+            branchHandle.setTarget(returnHandle);
+        }
     }
 }

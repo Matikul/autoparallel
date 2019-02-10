@@ -35,6 +35,7 @@ public class BytecodeModifier {
         TransformUtils.addThreadPool(modifiedClass);
         TransformUtils.addTaskPool(modifiedClass, methodGen);
         TransformUtils.addFutureResultsList(modifiedClass, methodGen);
+        TransformUtils.copyLoopToMethod(modifiedClass, methodGen);
         saveModifiedClass(classPath, className, modifiedClass);
     }
 
