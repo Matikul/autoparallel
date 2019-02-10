@@ -7,7 +7,6 @@ import org.apache.bcel.generic.MethodGen;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import pl.edu.agh.transformations.BytecodeModifier;
-import pl.edu.agh.transformations.util.Constants;
 import pl.edu.agh.util.LoopUtils;
 
 import java.io.IOException;

@@ -8,8 +8,7 @@ import org.apache.bcel.generic.Type;
 import org.junit.Test;
 import pl.edu.agh.transformations.util.Constants;
 
-import java.util.ArrayList;
-import java.util.concurrent.Callable;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -34,6 +33,6 @@ public class TransformUtilsTests {
         TransformUtils.addTaskPool(testClass, testMethod);
         assertEquals(2, testMethod.getLocalVariables().length);
         assertEquals(Constants.TASK_POOL_NAME, testMethod.getLocalVariables()[1].getName());
-        assertEquals(Type.getType((new ArrayList<Callable<Integer>>()).getClass()), testMethod.getLocalVariables()[1].getType());
+        assertEquals(Type.getType(List.class), testMethod.getLocalVariables()[1].getType());
     }
 }
