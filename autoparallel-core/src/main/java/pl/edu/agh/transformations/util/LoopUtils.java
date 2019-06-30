@@ -3,6 +3,7 @@ package pl.edu.agh.transformations.util;
 import org.apache.bcel.generic.BranchHandle;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.MethodGen;
+import org.apache.bcel.generic.StoreInstruction;
 
 import java.util.Arrays;
 
@@ -31,5 +32,14 @@ public class LoopUtils {
     private static boolean isBetweenPositions(InstructionHandle instruction, int start, int end) {
         int instructionPosition = instruction.getPosition();
         return instructionPosition >= start && instructionPosition <= end;
+    }
+
+    public static int getForLoopVariableIndex(InstructionHandle[] loopInstructions) {
+        return ((StoreInstruction) (loopInstructions[1].getInstruction())).getIndex();
+    }
+
+    public static void updateLoopVariableIndex(InstructionHandle[] loopInstructions, int newSlot) {
+        StoreInstruction forLoopStoreInstruction = (StoreInstruction) loopInstructions[1].getInstruction();
+        forLoopStoreInstruction.setIndex(newSlot);
     }
 }

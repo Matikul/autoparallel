@@ -26,9 +26,9 @@ public class BytecodeModifier {
 
         MethodGen methodGen = new MethodGen(modifiedClass.getMethodAt(1), modifiedClass.getClassName(), modifiedClass.getConstantPool());
 
-        TransformUtils.addThreadPool(modifiedClass);
-        TransformUtils.addTaskPool(modifiedClass, methodGen);
-        TransformUtils.addFutureResultsList(modifiedClass, methodGen);
+//        TransformUtils.addThreadPool(modifiedClass);
+//        TransformUtils.addTaskPool(modifiedClass, methodGen);
+//        TransformUtils.addFutureResultsList(modifiedClass, methodGen);
         TransformUtils.copyLoopToMethod(modifiedClass, methodGen);
         saveModifiedClass(classPath, className, modifiedClass);
     }

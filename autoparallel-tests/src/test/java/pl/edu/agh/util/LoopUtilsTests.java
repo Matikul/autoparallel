@@ -26,6 +26,7 @@ public class LoopUtilsTests {
     private static final int EXPECTED_LOOP_END_POSITION_MAIN_METHOD = 21;
     private static final int EXPECTED_LOOP_START_POSITION_SUBTASK_METHOD = 0;
     private static final int EXPECTED_LOOP_END_POSITION_SUBTASK_METHOD = 28;
+    private static final int EXPECTED_LOOP_VARIABLE_INDEX = 2;
 
     @Test
     public void shouldGetLoopFromMainMethod() throws Exception {
@@ -50,6 +51,26 @@ public class LoopUtilsTests {
         ClassGen testClass = new ClassGen(new ClassParser(TEST_2_CLASS_LOCATION).parse());
         MethodGen testMethod = new MethodGen(testClass.getMethodAt(TRASH_METHOD_INDEX), testClass.getClassName(), testClass.getConstantPool());
         List<InstructionHandle> forLoop = Arrays.asList(LoopUtils.getForLoop(testMethod));
+    }
+
+    @Test
+    public void shouldReturnTwoAsLoopVariableIndex() throws Exception {
+        ClassGen testClass = new ClassGen(new ClassParser(TEST_2_CLASS_LOCATION).parse());
+        MethodGen testMethod = new MethodGen(testClass.getMethodAt(MAIN_METHOD_INDEX), testClass.getClassName(), testClass.getConstantPool());
+        InstructionHandle[] loopInstructions = LoopUtils.getForLoop(testMethod);
+        int forLoopVariableIndex = LoopUtils.getForLoopVariableIndex(loopInstructions);
+        assertEquals(EXPECTED_LOOP_VARIABLE_INDEX, forLoopVariableIndex);
+    }
+
+    @Test
+    public void shouldUpdateLoopVariableTargetSlot() throws Exception {
+        ClassGen testClass = new ClassGen(new ClassParser(TEST_2_CLASS_LOCATION).parse());
+        MethodGen testMethod = new MethodGen(testClass.getMethodAt(MAIN_METHOD_INDEX), testClass.getClassName(), testClass.getConstantPool());
+        InstructionHandle[] loopInstructions = LoopUtils.getForLoop(testMethod);
+        LoopUtils.updateLoopVariableIndex(loopInstructions, 1);
+        int forLoopVariableIndex = LoopUtils.getForLoopVariableIndex(loopInstructions);
+        assertEquals(1, forLoopVariableIndex);
+        //TODO rest of for loop update functionality
     }
 
     private int getFirstInstructionPosition(List<InstructionHandle> forLoop) {

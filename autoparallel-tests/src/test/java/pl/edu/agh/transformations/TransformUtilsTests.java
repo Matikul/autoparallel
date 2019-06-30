@@ -16,6 +16,7 @@ import static org.junit.Assert.assertEquals;
 public class TransformUtilsTests {
 
     private static final String TEST_1_CLASS_LOCATION = "src/test/resources/Test1.class";
+    private static final String TEST_3_CLASS_LOCATION = "src/test/resources/Test3.class";
     private static final int EXPECTED_COUNT = 2;
 
     @Test
@@ -36,5 +37,17 @@ public class TransformUtilsTests {
         assertEquals(EXPECTED_COUNT, testMethod.getLocalVariables().length);
         assertEquals(Constants.TASK_POOL_NAME, testMethod.getLocalVariables()[1].getName());
         assertEquals(Type.getType(List.class), testMethod.getLocalVariables()[1].getType());
+    }
+
+    @Test
+    public void shouldCopyLoopToMethod() throws Exception {
+        ClassGen testClass = new ClassGen(new ClassParser(TEST_3_CLASS_LOCATION).parse());
+        int expectedMethodCount = testClass.getMethods().length + 1;
+        MethodGen testMethod = new MethodGen(testClass.getMethodAt(1), testClass.getClassName(), testClass.getConstantPool());
+        TransformUtils.copyLoopToMethod(testClass, testMethod);
+        assertEquals(expectedMethodCount, testClass.getMethods().length);
+//        MethodGen addedMethod = new MethodGen(testClass.getMethodAt(2), testClass.getClassName(), testClass.getConstantPool());
+//        assertEquals(Constants.START_INDEX_VARIABLE_NAME, addedMethod.getArgumentNames()[0]);
+//        assertEquals(Constants.END_INDEX_VARIABLE_NAME, addedMethod.getArgumentNames()[1]);
     }
 }

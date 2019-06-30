@@ -136,8 +136,8 @@ public class TransformUtils {
         InstructionList subTaskInstructionList = getSubtaskInstructions(methodGen);
         subTaskInstructionList.append(InstructionFactory.createReturn(methodGen.getReturnType()));
 
-        int loopVariableIndex = ((StoreInstruction) (subTaskInstructionList.getInstructions()[1])).getIndex();
-        LocalVariableGen loopVariable = methodGen.getLocalVariables()[loopVariableIndex];
+        int previousLoopVariableSlot = ((StoreInstruction) (subTaskInstructionList.getInstructions()[1])).getIndex();
+        LocalVariableGen loopVariable = methodGen.getLocalVariables()[previousLoopVariableSlot];
 
         MethodGen subTaskMethod = new MethodGen(Const.ACC_PRIVATE,
                                                 methodGen.getReturnType(),
@@ -149,21 +149,22 @@ public class TransformUtils {
                                                 classGen.getConstantPool());
         subTaskMethod.addLocalVariable(Constants.START_INDEX_VARIABLE_NAME,
                                        Type.INT,
-                                       0,//TODO slot
+                                       1,
                                        null, null);
         subTaskMethod.addLocalVariable(Constants.END_INDEX_VARIABLE_NAME,
                                        Type.INT,
-                                       1,//TODO slot
+                                       2,
                                        null, null);
         updateBranchInstructions(subTaskInstructionList);
-        int loopVariableSlot = 2;//TODO slot: loopVariable.getIndex();
+        int newLoopVariableSlot = 3;
         subTaskMethod.addLocalVariable(loopVariable.getName(),
                                        loopVariable.getType(),
-                                       loopVariableSlot,
+                                       newLoopVariableSlot,
                                        null, null);
+        LoopUtils.updateLoopVariableIndex(subTaskInstructionList.getInstructionHandles(), newLoopVariableSlot);
         subTaskMethod.setArgumentNames(new String[]{Constants.START_INDEX_VARIABLE_NAME, Constants.END_INDEX_VARIABLE_NAME});
         subTaskMethod.setArgumentTypes(new Type[]{Type.INT, Type.INT});
-        subTaskMethod.setMaxLocals();
+        subTaskMethod.setMaxLocals(4);
         subTaskMethod.setMaxStack();
         classGen.addMethod(subTaskMethod.getMethod());
     }
