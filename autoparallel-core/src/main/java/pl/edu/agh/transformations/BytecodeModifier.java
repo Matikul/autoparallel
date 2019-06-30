@@ -5,6 +5,7 @@ import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.generic.ClassGen;
 import org.apache.bcel.generic.MethodGen;
+import pl.edu.agh.transformations.util.TransformUtils;
 
 import java.io.FileOutputStream;
 import java.io.IOException;

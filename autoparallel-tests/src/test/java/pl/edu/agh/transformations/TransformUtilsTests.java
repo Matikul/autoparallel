@@ -7,6 +7,7 @@ import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.Type;
 import org.junit.Test;
 import pl.edu.agh.transformations.util.Constants;
+import pl.edu.agh.transformations.util.TransformUtils;
 
 import java.util.List;
 

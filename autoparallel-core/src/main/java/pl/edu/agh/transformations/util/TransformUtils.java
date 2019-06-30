@@ -1,21 +1,14 @@
-package pl.edu.agh.transformations;
+package pl.edu.agh.transformations.util;
 
 import org.apache.bcel.Const;
 import org.apache.bcel.generic.*;
-import pl.edu.agh.transformations.util.Constants;
-import pl.edu.agh.util.LoopUtils;
 
 import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 
 public class TransformUtils {
 
-    /**
-     * Method that adds static field with thread pool to the class
-     *
-     * @param classGen
-     */
-    static void addThreadPool(ClassGen classGen) {
+    public static void addThreadPool(ClassGen classGen) {
         ConstantPoolGen constantPoolGen = classGen.getConstantPool();
         FieldGen threadCount = new FieldGen(Const.ACC_PUBLIC | Const.ACC_STATIC | Const.ACC_FINAL,
                                             Type.INT,
@@ -69,13 +62,7 @@ public class TransformUtils {
         classGen.addMethod(methodGen.getMethod());
     }
 
-    /**
-     * adds List<Callable> of tasks to method
-     *
-     * @param classGen
-     * @param methodGen
-     */
-    static void addTaskPool(ClassGen classGen, MethodGen methodGen) {
+    public static void addTaskPool(ClassGen classGen, MethodGen methodGen) {
         ConstantPoolGen constantPoolGen = classGen.getConstantPool();
         InstructionFactory instructionFactory = new InstructionFactory(classGen, constantPoolGen);
         InstructionList appendedInstructions = new InstructionList();
@@ -108,13 +95,7 @@ public class TransformUtils {
                 .forEach(var -> var.setStart(startHandle));
     }
 
-    /**
-     * adds list of Futures to store partial results of parallelized method
-     *
-     * @param classGen
-     * @param methodGen
-     */
-    static void addFutureResultsList(ClassGen classGen, MethodGen methodGen) {
+    public static void addFutureResultsList(ClassGen classGen, MethodGen methodGen) {
         ConstantPoolGen constantPoolGen = classGen.getConstantPool();
         InstructionFactory instructionFactory = new InstructionFactory(classGen, constantPoolGen);
         InstructionList appendedInstructions = new InstructionList();
@@ -141,17 +122,38 @@ public class TransformUtils {
     }
 
     public static void copyLoopToMethod(ClassGen classGen, MethodGen methodGen) {
+
         InstructionList subTaskInstructionList = getSubtaskInstructions(methodGen);
         subTaskInstructionList.append(InstructionFactory.createReturn(methodGen.getReturnType()));
+
+        int loopVariableIndex = ((StoreInstruction) (subTaskInstructionList.getInstructions()[1])).getIndex();
+        LocalVariableGen loopVariable = methodGen.getLocalVariables()[loopVariableIndex];
+
         MethodGen subTaskMethod = new MethodGen(Const.ACC_PRIVATE,
                                                 methodGen.getReturnType(),
-                                                new Type[]{Type.INT, Type.INT},
-                                                new String[]{Constants.START_INDEX_VARIABLE_NAME, Constants.END_INDEX_VARIABLE_NAME},
+                                                new Type[]{},
+                                                new String[]{},
                                                 Constants.SUBTASK_METHOD_NAME,
                                                 classGen.getClassName(),
                                                 subTaskInstructionList,
                                                 classGen.getConstantPool());
+//        subTaskMethod.removeLocalVariables();
+        subTaskMethod.addLocalVariable(Constants.START_INDEX_VARIABLE_NAME,
+                                       Type.INT,
+                                       0,//TODO slot
+                                       null, null);
+        subTaskMethod.addLocalVariable(Constants.END_INDEX_VARIABLE_NAME,
+                                       Type.INT,
+                                       1,//TODO slot
+                                       null, null);
         updateBranchInstructions(subTaskInstructionList);
+        int loopVariableSlot = 2;//TODO slot: loopVariable.getIndex();
+        subTaskMethod.addLocalVariable(loopVariable.getName(),
+                                       loopVariable.getType(),
+                                       loopVariableSlot,
+                                       null, null);
+        subTaskMethod.setArgumentNames(new String[]{Constants.START_INDEX_VARIABLE_NAME, Constants.END_INDEX_VARIABLE_NAME});
+        subTaskMethod.setArgumentTypes(new Type[]{Type.INT, Type.INT});
         subTaskMethod.setMaxLocals();
         subTaskMethod.setMaxStack();
         classGen.addMethod(subTaskMethod.getMethod());
