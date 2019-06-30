@@ -10,6 +10,26 @@ public class TransformUtils {
 
     public static void addThreadPool(ClassGen classGen) {
         ConstantPoolGen constantPoolGen = classGen.getConstantPool();
+        addClassFields(classGen, constantPoolGen);
+        InstructionList instructionList = new InstructionList();
+        InstructionFactory instructionFactory = new InstructionFactory(classGen, constantPoolGen);
+        String className = classGen.getClassName();
+        appendFieldsInstructions(instructionList, instructionFactory, className);
+        MethodGen methodGen = new MethodGen(Const.ACC_STATIC,
+                                            Type.VOID,
+                                            Type.NO_ARGS,
+                                            new String[0],
+                                            Const.STATIC_INITIALIZER_NAME,
+                                            className,
+                                            instructionList,
+                                            constantPoolGen);
+        methodGen.stripAttributes(true);
+        methodGen.setMaxLocals();
+        methodGen.setMaxStack();
+        classGen.addMethod(methodGen.getMethod());
+    }
+
+    private static void addClassFields(ClassGen classGen, ConstantPoolGen constantPoolGen) {
         FieldGen threadCount = new FieldGen(Const.ACC_PUBLIC | Const.ACC_STATIC | Const.ACC_FINAL,
                                             Type.INT,
                                             Constants.NUMBER_OF_THREADS_CONSTANT_NAME,
@@ -20,8 +40,11 @@ public class TransformUtils {
                                         constantPoolGen);
         classGen.addField(threadCount.getField());
         classGen.addField(service.getField());
-        InstructionList instructionList = new InstructionList();
-        InstructionFactory instructionFactory = new InstructionFactory(classGen, constantPoolGen);
+    }
+
+    private static void appendFieldsInstructions(InstructionList instructionList,
+                                                 InstructionFactory instructionFactory,
+                                                 String className) {
         instructionList.append(instructionFactory.createInvoke("java.lang.Runtime",
                                                                "getRuntime",
                                                                Type.getType(Runtime.class),
@@ -32,10 +55,10 @@ public class TransformUtils {
                                                                Type.INT,
                                                                Type.NO_ARGS,
                                                                Const.INVOKEVIRTUAL));
-        instructionList.append(instructionFactory.createPutStatic(classGen.getClassName(),
+        instructionList.append(instructionFactory.createPutStatic(className,
                                                                   Constants.NUMBER_OF_THREADS_CONSTANT_NAME,
                                                                   Type.INT));
-        instructionList.append(instructionFactory.createGetStatic(classGen.getClassName(),
+        instructionList.append(instructionFactory.createGetStatic(className,
                                                                   Constants.NUMBER_OF_THREADS_CONSTANT_NAME,
                                                                   Type.INT));
         instructionList.append(instructionFactory.createInvoke("java.util.concurrent.Executors",
@@ -43,23 +66,10 @@ public class TransformUtils {
                                                                Type.getType(ExecutorService.class),
                                                                new Type[]{Type.INT},
                                                                Const.INVOKESTATIC));
-        instructionList.append(instructionFactory.createPutStatic(classGen.getClassName(),
+        instructionList.append(instructionFactory.createPutStatic(className,
                                                                   Constants.EXECUTOR_SERVICE_CONSTANT_NAME,
                                                                   Type.getType(ExecutorService.class)));
         instructionList.append(InstructionFactory.createReturn(Type.VOID));
-        MethodGen methodGen = new MethodGen(Const.ACC_STATIC,
-                                            Type.VOID,
-                                            Type.NO_ARGS,
-                                            new String[0],
-                                            Const.STATIC_INITIALIZER_NAME,
-                                            classGen.getClassName(),
-                                            instructionList,
-                                            constantPoolGen
-        );
-        methodGen.stripAttributes(true);
-        methodGen.setMaxLocals();
-        methodGen.setMaxStack();
-        classGen.addMethod(methodGen.getMethod());
     }
 
     public static void addTaskPool(ClassGen classGen, MethodGen methodGen) {
@@ -137,7 +147,6 @@ public class TransformUtils {
                                                 classGen.getClassName(),
                                                 subTaskInstructionList,
                                                 classGen.getConstantPool());
-//        subTaskMethod.removeLocalVariables();
         subTaskMethod.addLocalVariable(Constants.START_INDEX_VARIABLE_NAME,
                                        Type.INT,
                                        0,//TODO slot

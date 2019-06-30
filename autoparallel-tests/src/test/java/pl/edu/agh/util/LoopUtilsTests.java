@@ -24,7 +24,7 @@ public class LoopUtilsTests {
     private static final int EXPECTED_LOOP_END_POSITION_SUBTASK_METHOD = 28;
 
     @Test
-    public void shouldGetLoopFromMainMethod() throws Exception{
+    public void shouldGetLoopFromMainMethod() throws Exception {
         ClassGen testClass = new ClassGen(new ClassParser(TEST_2_CLASS_LOCATION).parse());
         MethodGen testMethod = new MethodGen(testClass.getMethodAt(1), testClass.getClassName(), testClass.getConstantPool());
         List<InstructionHandle> forLoop = Arrays.asList(LoopUtils.getForLoop(testMethod));
@@ -33,7 +33,7 @@ public class LoopUtilsTests {
     }
 
     @Test
-    public void shouldGetLoopFromSubtaskMethod() throws Exception{
+    public void shouldGetLoopFromSubtaskMethod() throws Exception {
         ClassGen testClass = new ClassGen(new ClassParser(TEST_2_CLASS_LOCATION).parse());
         MethodGen testMethod = new MethodGen(testClass.getMethodAt(3), testClass.getClassName(), testClass.getConstantPool());
         List<InstructionHandle> forLoop = Arrays.asList(LoopUtils.getForLoop(testMethod));
@@ -42,7 +42,7 @@ public class LoopUtilsTests {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void shouldThrowExceptionWhenNoLoopFound() throws Exception{
+    public void shouldThrowExceptionWhenNoLoopFound() throws Exception {
         ClassGen testClass = new ClassGen(new ClassParser(TEST_2_CLASS_LOCATION).parse());
         MethodGen testMethod = new MethodGen(testClass.getMethodAt(2), testClass.getClassName(), testClass.getConstantPool());
         List<InstructionHandle> forLoop = Arrays.asList(LoopUtils.getForLoop(testMethod));

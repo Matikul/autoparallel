@@ -19,14 +19,7 @@ public class BytecodeModifier {
 
     public void modifyBytecode(String classPath, String className) throws IOException {
         JavaClass analyzedClass = new ClassParser(classPath + "\\" + className + CLASS_SUFFIX).parse();
-        ClassGen oldClass = new ClassGen(analyzedClass);
-
-        ClassGen modifiedClass = new ClassGen(analyzedClass.getPackageName() + className + MODIFICATION_SUFFIX,
-                                              Object.class.getName(),
-                                              className + MODIFICATION_SUFFIX + JAVA_SUFFIX,
-                                              Const.ACC_PUBLIC,
-                                              null,
-                                              oldClass.getConstantPool());
+        ClassGen modifiedClass = getModifiedClass(className, analyzedClass);
         //TODO main() is on the position 1 (default constructor is on position 0),
         //TODO to change other methods I need to change the way of calling TransformUtils
         copyMethods(analyzedClass, modifiedClass);
@@ -38,6 +31,16 @@ public class BytecodeModifier {
         TransformUtils.addFutureResultsList(modifiedClass, methodGen);
         TransformUtils.copyLoopToMethod(modifiedClass, methodGen);
         saveModifiedClass(classPath, className, modifiedClass);
+    }
+
+    private ClassGen getModifiedClass(String className, JavaClass analyzedClass) {
+        ClassGen oldClass = new ClassGen(analyzedClass);
+        return new ClassGen(analyzedClass.getPackageName() + className + MODIFICATION_SUFFIX,
+                            Object.class.getName(),
+                            className + MODIFICATION_SUFFIX + JAVA_SUFFIX,
+                            Const.ACC_PUBLIC,
+                            null,
+                            oldClass.getConstantPool());
     }
 
     private void copyMethods(JavaClass oldClass, ClassGen newClass) {

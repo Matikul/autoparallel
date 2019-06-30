@@ -1,13 +1,8 @@
 package pl.edu.agh;
 
-import org.apache.bcel.classfile.ClassParser;
-import org.apache.bcel.classfile.JavaClass;
-import org.apache.bcel.generic.ClassGen;
-import org.apache.bcel.generic.MethodGen;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import pl.edu.agh.transformations.BytecodeModifier;
-import pl.edu.agh.transformations.util.LoopUtils;
 
 import java.io.IOException;
 
@@ -37,13 +32,5 @@ public class IntegrationTest {
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
-    }
-
-    @Test
-    public void test() throws IOException {
-        JavaClass analyzedClass = new ClassParser(TEST_CLASS_LOCATION + "\\" + "Test2.class").parse();
-        ClassGen classGen = new ClassGen(analyzedClass);
-        MethodGen methodGen = new MethodGen(analyzedClass.getMethods()[1], classGen.getClassName(), classGen.getConstantPool());
-        LoopUtils.getForLoop(methodGen);
     }
 }
