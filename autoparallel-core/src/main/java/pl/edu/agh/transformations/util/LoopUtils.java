@@ -1,9 +1,8 @@
-package pl.edu.agh.util;
+package pl.edu.agh.transformations.util;
 
 import org.apache.bcel.generic.BranchHandle;
 import org.apache.bcel.generic.InstructionHandle;
 import org.apache.bcel.generic.MethodGen;
-import pl.edu.agh.transformations.util.Constants;
 
 import java.util.Arrays;
 
