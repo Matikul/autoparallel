@@ -18,6 +18,10 @@ public class LoopUtilsTests {
 
     private static final int FIRST_ITEM_INDEX = 0;
 
+    private static final int MAIN_METHOD_INDEX = 1;
+    private static final int TRASH_METHOD_INDEX = 2;
+    private static final int SUBTASK_METHOD_INDEX = 3;
+
     private static final int EXPECTED_LOOP_START_POSITION_MAIN_METHOD = 3;
     private static final int EXPECTED_LOOP_END_POSITION_MAIN_METHOD = 21;
     private static final int EXPECTED_LOOP_START_POSITION_SUBTASK_METHOD = 0;
@@ -26,7 +30,7 @@ public class LoopUtilsTests {
     @Test
     public void shouldGetLoopFromMainMethod() throws Exception {
         ClassGen testClass = new ClassGen(new ClassParser(TEST_2_CLASS_LOCATION).parse());
-        MethodGen testMethod = new MethodGen(testClass.getMethodAt(1), testClass.getClassName(), testClass.getConstantPool());
+        MethodGen testMethod = new MethodGen(testClass.getMethodAt(MAIN_METHOD_INDEX), testClass.getClassName(), testClass.getConstantPool());
         List<InstructionHandle> forLoop = Arrays.asList(LoopUtils.getForLoop(testMethod));
         assertEquals(EXPECTED_LOOP_START_POSITION_MAIN_METHOD, getFirstInstructionPosition(forLoop));
         assertEquals(EXPECTED_LOOP_END_POSITION_MAIN_METHOD, getLastInstructionPosition(forLoop));
@@ -35,7 +39,7 @@ public class LoopUtilsTests {
     @Test
     public void shouldGetLoopFromSubtaskMethod() throws Exception {
         ClassGen testClass = new ClassGen(new ClassParser(TEST_2_CLASS_LOCATION).parse());
-        MethodGen testMethod = new MethodGen(testClass.getMethodAt(3), testClass.getClassName(), testClass.getConstantPool());
+        MethodGen testMethod = new MethodGen(testClass.getMethodAt(SUBTASK_METHOD_INDEX), testClass.getClassName(), testClass.getConstantPool());
         List<InstructionHandle> forLoop = Arrays.asList(LoopUtils.getForLoop(testMethod));
         assertEquals(EXPECTED_LOOP_START_POSITION_SUBTASK_METHOD, getFirstInstructionPosition(forLoop));
         assertEquals(EXPECTED_LOOP_END_POSITION_SUBTASK_METHOD, getLastInstructionPosition(forLoop));
@@ -44,7 +48,7 @@ public class LoopUtilsTests {
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowExceptionWhenNoLoopFound() throws Exception {
         ClassGen testClass = new ClassGen(new ClassParser(TEST_2_CLASS_LOCATION).parse());
-        MethodGen testMethod = new MethodGen(testClass.getMethodAt(2), testClass.getClassName(), testClass.getConstantPool());
+        MethodGen testMethod = new MethodGen(testClass.getMethodAt(TRASH_METHOD_INDEX), testClass.getClassName(), testClass.getConstantPool());
         List<InstructionHandle> forLoop = Arrays.asList(LoopUtils.getForLoop(testMethod));
     }
 
