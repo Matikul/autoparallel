@@ -33,4 +33,18 @@ public class IntegrationTest {
             e.printStackTrace();
         }
     }
+
+    @Test
+    public void test() throws IOException {
+        modifier.modifyBytecode(TEST_CLASS_LOCATION, TEST_CLASS_NAME);
+        Runtime runtime = Runtime.getRuntime();
+        String command = System.getProperty("java.home") + "\\bin\\java -cp " + TEST_CLASS_LOCATION + " " + TEST_CLASS_NAME + BytecodeModifier.MODIFICATION_SUFFIX;
+        try {
+            Process process = runtime.exec(command);
+            process.waitFor();
+            assertEquals(0, process.exitValue());
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 }

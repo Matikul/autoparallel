@@ -1,9 +1,6 @@
 package pl.edu.agh.transformations.util;
 
-import org.apache.bcel.generic.BranchHandle;
-import org.apache.bcel.generic.InstructionHandle;
-import org.apache.bcel.generic.MethodGen;
-import org.apache.bcel.generic.StoreInstruction;
+import org.apache.bcel.generic.*;
 
 import java.util.Arrays;
 
@@ -40,6 +37,18 @@ public class LoopUtils {
 
     public static void updateLoopVariableIndex(InstructionHandle[] loopInstructions, int newSlot) {
         StoreInstruction forLoopStoreInstruction = (StoreInstruction) loopInstructions[1].getInstruction();
-        forLoopStoreInstruction.setIndex(newSlot);
+        int oldSlot = forLoopStoreInstruction.getIndex();
+        Arrays.stream(loopInstructions)
+                .map(InstructionHandle::getInstruction)
+                .forEach(instr -> updateSingleInstructionILoopVariableIndex(instr, oldSlot, newSlot));
+    }
+
+    private static void updateSingleInstructionILoopVariableIndex(Instruction instruction, int oldSlot, int newSlot) {
+        if (instruction instanceof LocalVariableInstruction) {
+            LocalVariableInstruction localVariableInstruction = (LocalVariableInstruction) instruction;
+            if (localVariableInstruction.getIndex() == oldSlot) {
+                localVariableInstruction.setIndex(newSlot);
+            }
+        }
     }
 }
