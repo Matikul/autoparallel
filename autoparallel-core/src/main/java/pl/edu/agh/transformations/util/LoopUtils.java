@@ -6,6 +6,9 @@ import java.util.Arrays;
 
 public class LoopUtils {
 
+    private static final int START_CONDITION_INSTRUCTION_INDEX = 0;
+    private static final int END_CONDITION_INSTRUCTION_INDEX = 3;
+
     public static InstructionHandle[] getForLoop(MethodGen methodGen) {
         InstructionHandle gotoInstruction = getGoto(methodGen.getInstructionList().getInstructionHandles());
         int startPosition = ((BranchHandle) gotoInstruction).getTarget().getPrev().getPrev().getPosition();
@@ -53,6 +56,10 @@ public class LoopUtils {
     }
 
     public static void updateLoopStartCondition(InstructionHandle[] loopInstructions, int startVariableIndex) {
-        loopInstructions[0].setInstruction(new ILOAD(startVariableIndex));
+        loopInstructions[START_CONDITION_INSTRUCTION_INDEX].setInstruction(new ILOAD(startVariableIndex));
+    }
+
+    public static void updateLoopEndCondition(InstructionHandle[] loopInstructions, int endVariableIndex) {
+        loopInstructions[END_CONDITION_INSTRUCTION_INDEX].setInstruction(new ILOAD(endVariableIndex));
     }
 }

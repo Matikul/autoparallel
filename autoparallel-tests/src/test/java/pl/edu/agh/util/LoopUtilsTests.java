@@ -27,6 +27,7 @@ public class LoopUtilsTests {
     private static final int EXPECTED_LOOP_END_POSITION_SUBTASK_METHOD = 28;
     private static final int EXPECTED_LOOP_VARIABLE_INDEX = 2;
     private static final int EXPECTED_LOOP_START_CONDITION_INDEX = 99;
+    private static final int EXPECTED_LOOP_END_CONDITION_INDEX = 9999;
 
     @Test
     @SuppressWarnings("Duplicates")
@@ -86,6 +87,18 @@ public class LoopUtilsTests {
         assertTrue(loopInstructions[0].getInstruction() instanceof LoadInstruction);
         int loadIndex = ((LoadInstruction) loopInstructions[0].getInstruction()).getIndex();
         assertEquals(EXPECTED_LOOP_START_CONDITION_INDEX, loadIndex);
+    }
+
+    @Test
+    public void shouldChangeLoopEndCondition() throws Exception {
+        ClassGen testClass = new ClassGen(new ClassParser(TEST_2_CLASS_LOCATION).parse());
+        MethodGen testMethod = new MethodGen(testClass.getMethodAt(SUBTASK_METHOD_INDEX), testClass.getClassName(), testClass.getConstantPool());
+        InstructionHandle[] loopInstructions = LoopUtils.getForLoop(testMethod);
+        assertTrue(loopInstructions[3].getInstruction() instanceof ConstantPushInstruction);
+        LoopUtils.updateLoopEndCondition(loopInstructions, EXPECTED_LOOP_END_CONDITION_INDEX);
+        assertTrue(loopInstructions[3].getInstruction() instanceof LoadInstruction);
+        int loadIndex = ((LoadInstruction) loopInstructions[3].getInstruction()).getIndex();
+        assertEquals(EXPECTED_LOOP_END_CONDITION_INDEX, loadIndex);
     }
 
     private int getFirstInstructionPosition(List<InstructionHandle> forLoop) {
