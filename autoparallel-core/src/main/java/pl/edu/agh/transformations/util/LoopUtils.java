@@ -51,4 +51,8 @@ public class LoopUtils {
             }
         }
     }
+
+    public static void updateLoopStartCondition(InstructionHandle[] loopInstructions, int startVariableIndex) {
+        loopInstructions[0].setInstruction(new ILOAD(startVariableIndex));
+    }
 }

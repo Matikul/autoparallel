@@ -162,6 +162,7 @@ public class TransformUtils {
                                        newLoopVariableSlot,
                                        null, null);
         LoopUtils.updateLoopVariableIndex(subTaskInstructionList.getInstructionHandles(), newLoopVariableSlot);
+        LoopUtils.updateLoopStartCondition(subTaskInstructionList.getInstructionHandles(), 1);
         subTaskMethod.setArgumentNames(new String[]{Constants.START_INDEX_VARIABLE_NAME, Constants.END_INDEX_VARIABLE_NAME});
         subTaskMethod.setArgumentTypes(new Type[]{Type.INT, Type.INT});
         subTaskMethod.setMaxLocals(4);
