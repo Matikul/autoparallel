@@ -13,6 +13,8 @@ public class IntegrationTest {
     private static final String TEST_CLASS_LOCATION = "src/test/resources";
     private static final String TEST_CLASS_NAME = "IntegrationTestClass";
 
+    private static final int MODIFIED_METHOD_POSITION = 1; //main() method position
+
     private static BytecodeModifier modifier;
 
     @BeforeClass
@@ -21,8 +23,9 @@ public class IntegrationTest {
     }
 
     @Test
+    @SuppressWarnings("Duplicates")
     public void modifiedClassRunTest() throws IOException {
-        modifier.modifyBytecode(TEST_CLASS_LOCATION, TEST_CLASS_NAME);
+        modifier.modifyBytecode(TEST_CLASS_LOCATION, TEST_CLASS_NAME, MODIFIED_METHOD_POSITION);
         Runtime runtime = Runtime.getRuntime();
         String command = System.getProperty("java.home") + "\\bin\\java -cp " + TEST_CLASS_LOCATION + " " + TEST_CLASS_NAME + BytecodeModifier.MODIFICATION_SUFFIX;
         try {
@@ -35,8 +38,9 @@ public class IntegrationTest {
     }
 
     @Test
+    @SuppressWarnings("Duplicates")
     public void test() throws IOException {
-        modifier.modifyBytecode(TEST_CLASS_LOCATION, TEST_CLASS_NAME);
+        modifier.modifyBytecode(TEST_CLASS_LOCATION, TEST_CLASS_NAME, MODIFIED_METHOD_POSITION);
         Runtime runtime = Runtime.getRuntime();
         String command = System.getProperty("java.home") + "\\bin\\java -cp " + TEST_CLASS_LOCATION + " " + TEST_CLASS_NAME + BytecodeModifier.MODIFICATION_SUFFIX;
         try {

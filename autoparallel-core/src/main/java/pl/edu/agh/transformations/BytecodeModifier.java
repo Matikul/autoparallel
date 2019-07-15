@@ -17,18 +17,16 @@ public class BytecodeModifier {
     private static final String CLASS_SUFFIX = ".class";
     private static final String JAVA_SUFFIX = ".java";
 
-    public void modifyBytecode(String classPath, String className) throws IOException {
+    public void modifyBytecode(String classPath, String className, int methodPosition) throws IOException {
         JavaClass analyzedClass = new ClassParser(classPath + "\\" + className + CLASS_SUFFIX).parse();
         ClassGen modifiedClass = getModifiedClass(className, analyzedClass);
-        //TODO main() is on the position 1 (default constructor is on position 0),
-        //TODO to change other methods I need to change the way of calling TransformUtils
         copyMethods(analyzedClass, modifiedClass);
 
-        MethodGen methodGen = new MethodGen(modifiedClass.getMethodAt(1), modifiedClass.getClassName(), modifiedClass.getConstantPool());
+        MethodGen methodGen = new MethodGen(modifiedClass.getMethodAt(methodPosition), modifiedClass.getClassName(), modifiedClass.getConstantPool());
 
-//        TransformUtils.addThreadPool(modifiedClass);
-//        TransformUtils.addTaskPool(modifiedClass, methodGen);
-//        TransformUtils.addFutureResultsList(modifiedClass, methodGen);
+        TransformUtils.addThreadPool(modifiedClass);
+        TransformUtils.addTaskPool(modifiedClass, methodGen);
+        TransformUtils.addFutureResultsList(modifiedClass, methodGen);
         TransformUtils.copyLoopToMethod(modifiedClass, methodGen);
         saveModifiedClass(classPath, className, modifiedClass);
     }
