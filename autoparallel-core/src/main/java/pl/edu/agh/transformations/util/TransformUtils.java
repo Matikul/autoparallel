@@ -1,6 +1,9 @@
 package pl.edu.agh.transformations.util;
 
 import org.apache.bcel.Const;
+import org.apache.bcel.classfile.ConstantFieldref;
+import org.apache.bcel.classfile.ConstantNameAndType;
+import org.apache.bcel.classfile.ConstantPool;
 import org.apache.bcel.generic.*;
 
 import java.util.Arrays;
@@ -177,9 +180,9 @@ public class TransformUtils {
         for (InstructionHandle instr : loopInstructions) {
             if (instr instanceof BranchHandle) {
                 BranchHandle branch = (BranchHandle) instr;
-                subTaskInstructionList.append((BranchInstruction) branch.getInstruction());
+                subTaskInstructionList.append((BranchInstruction) branch.getInstruction().copy());
             } else {
-                subTaskInstructionList.append(instr.getInstruction());
+                subTaskInstructionList.append(instr.getInstruction().copy());
             }
         }
         return subTaskInstructionList;
@@ -203,5 +206,33 @@ public class TransformUtils {
         } else {
             branchHandle.setTarget(returnHandle);
         }
+    }
+
+    public static void changeLoopLimitToNumberOfThreads(ClassGen classGen, MethodGen methodGen) {
+        InstructionHandle[] forLoop = LoopUtils.getForLoop(methodGen);
+        int numThreadsConstantIndex = getNumThreadsFieldIndex(classGen);
+        forLoop[3].setInstruction(new GETSTATIC(numThreadsConstantIndex));
+        classGen.replaceMethod(methodGen.getMethod(), methodGen.getMethod());
+    }
+
+    private static int getNumThreadsFieldIndex(ClassGen classGen) {
+        ConstantPool constantPool = classGen.getConstantPool().getConstantPool();
+        ConstantFieldref numThreadsField = Arrays.stream(constantPool.getConstantPool())
+                .filter(ConstantFieldref.class::isInstance)
+                .map(ConstantFieldref.class::cast)
+                .filter((constant -> "NUM_THREADS".equals(getConstantName(constantPool, constant))))
+                .findAny()
+                .orElseThrow(() -> new IllegalStateException("Wrong state - constant NUM_THREADS cannot be found."));
+        for (int i = 1; i < constantPool.getConstantPool().length; i++) {
+            if (constantPool.getConstantPool()[i].equals(numThreadsField)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static String getConstantName(ConstantPool constantPool, ConstantFieldref constant) {
+        ConstantNameAndType constantNameAndType = (ConstantNameAndType) constantPool.getConstantPool()[constant.getNameAndTypeIndex()];
+        return constantNameAndType.getName(constantPool);
     }
 }

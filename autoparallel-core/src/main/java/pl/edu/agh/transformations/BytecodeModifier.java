@@ -3,6 +3,7 @@ package pl.edu.agh.transformations;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.ClassParser;
 import org.apache.bcel.classfile.JavaClass;
+import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ClassGen;
 import org.apache.bcel.generic.MethodGen;
 import pl.edu.agh.transformations.util.TransformUtils;
@@ -22,12 +23,14 @@ public class BytecodeModifier {
         ClassGen modifiedClass = getModifiedClass(className, analyzedClass);
         copyMethods(analyzedClass, modifiedClass);
 
-        MethodGen methodGen = new MethodGen(modifiedClass.getMethodAt(methodPosition), modifiedClass.getClassName(), modifiedClass.getConstantPool());
+        Method transformedMethod = modifiedClass.getMethodAt(methodPosition);
+        MethodGen methodGen = new MethodGen(transformedMethod, modifiedClass.getClassName(), modifiedClass.getConstantPool());
 
         TransformUtils.addThreadPool(modifiedClass);
         TransformUtils.addTaskPool(modifiedClass, methodGen);
         TransformUtils.addFutureResultsList(modifiedClass, methodGen);
         TransformUtils.copyLoopToMethod(modifiedClass, methodGen);
+        TransformUtils.changeLoopLimitToNumberOfThreads(modifiedClass, methodGen);
         saveModifiedClass(classPath, className, modifiedClass);
     }
 
