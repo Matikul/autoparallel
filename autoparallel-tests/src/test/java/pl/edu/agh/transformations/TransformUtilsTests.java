@@ -34,6 +34,16 @@ public class TransformUtilsTests {
     }
 
     @Test
+    public void shouldInjectRangeField() throws Exception {
+        ClassGen testClass = new ClassGen(new ClassParser(TEST_1_CLASS_LOCATION).parse());
+        int initialFieldCount = testClass.getFields().length;
+        TransformUtils.addRangeFields(testClass);
+        assertEquals(initialFieldCount + 2, testClass.getFields().length);
+        assertEquals(Constants.START_RANGE_CONSTANT_NAME, testClass.getFields()[initialFieldCount].getName());
+        assertEquals(Constants.END_RANGE_CONSTANT_NAME, testClass.getFields()[initialFieldCount + 1].getName());
+    }
+
+    @Test
     public void shouldInjectTaskPoolToClass() throws Exception {
         ClassGen testClass = new ClassGen(new ClassParser(TEST_1_CLASS_LOCATION).parse());
         MethodGen testMethod = new MethodGen(testClass.getMethodAt(1), testClass.getClassName(), testClass.getConstantPool());

@@ -75,6 +75,19 @@ public class TransformUtils {
         instructionList.append(InstructionFactory.createReturn(Type.VOID));
     }
 
+    public static void addRangeFields(ClassGen classGen) {
+        FieldGen startRangeField = new FieldGen(Const.ACC_PRIVATE | Const.ACC_STATIC,
+                                                Type.INT,
+                                                Constants.START_RANGE_CONSTANT_NAME,
+                                                classGen.getConstantPool());
+        FieldGen endRangeField = new FieldGen(Const.ACC_PRIVATE | Const.ACC_STATIC,
+                                              Type.INT,
+                                              Constants.END_RANGE_CONSTANT_NAME,
+                                              classGen.getConstantPool());
+        classGen.addField(startRangeField.getField());
+        classGen.addField(endRangeField.getField());
+    }
+
     public static void addTaskPool(ClassGen classGen, MethodGen methodGen) {
         ConstantPoolGen constantPoolGen = classGen.getConstantPool();
         InstructionFactory instructionFactory = new InstructionFactory(classGen, constantPoolGen);
