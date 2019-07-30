@@ -248,4 +248,86 @@ public class TransformUtils {
         ConstantNameAndType constantNameAndType = (ConstantNameAndType) constantPool.getConstantPool()[constant.getNameAndTypeIndex()];
         return constantNameAndType.getName(constantPool);
     }
+
+    public static void emptyMethodLoop(ClassGen classGen, MethodGen methodGen) {
+        InstructionHandle[] forLoop = LoopUtils.getForLoop(methodGen);
+        InstructionList modifiedInstructionList = new InstructionList();
+        appendInstructionsUntilLoopStart(modifiedInstructionList, methodGen.getInstructionList().getInstructionHandles(), forLoop[0]);
+        appendAll(modifiedInstructionList, LoopUtils.emptyLoop(forLoop));
+        appendInstructionsAfterLoop(modifiedInstructionList, methodGen.getInstructionList().getInstructionHandles(), forLoop[forLoop.length - 1]);
+        retargetEmptyLoopEndCondition(modifiedInstructionList);
+        methodGen.setInstructionList(modifiedInstructionList);
+        adjustLocalVariableTable(methodGen);
+        methodGen.setMaxStack();
+        methodGen.setMaxLocals();
+        methodGen.removeLineNumbers();
+        classGen.replaceMethod(methodGen.getMethod(), methodGen.getMethod());
+    }
+
+    private static void appendInstructionsUntilLoopStart(InstructionList instructionList, InstructionHandle[] allInstructions, InstructionHandle loopStartInstruction) {
+        for (InstructionHandle handle : allInstructions) {
+            if (handle == loopStartInstruction) {
+                break;
+            } else {
+                appendSingle(instructionList, handle);
+            }
+        }
+    }
+
+    private static void appendSingle(InstructionList instructionList, InstructionHandle handle) {
+        if (handle instanceof BranchHandle) {
+            BranchHandle branch = (BranchHandle) handle;
+            instructionList.append((BranchInstruction) branch.getInstruction().copy());
+        } else {
+            instructionList.append(handle.getInstruction().copy());
+        }
+    }
+
+    private static void appendAll(InstructionList instructionList, InstructionHandle[] allInstructions) {
+        for (InstructionHandle handle : allInstructions) {
+            appendSingle(instructionList, handle);
+        }
+    }
+
+    private static void appendInstructionsAfterLoop(InstructionList instructionList, InstructionHandle[] allInstructions, InstructionHandle loopEndInstruction) {
+        int lastLoopInstructionPosition = Arrays.asList(allInstructions).indexOf(loopEndInstruction);
+        if (lastLoopInstructionPosition == allInstructions.length - 1) {
+            return;
+        }
+        for (int i = lastLoopInstructionPosition + 1; i < allInstructions.length; i++) {
+            appendSingle(instructionList, allInstructions[i]);
+        }
+    }
+
+    private static void retargetEmptyLoopEndCondition(InstructionList modifiedInstructionList) {
+        InstructionHandle[] instructionHandles = modifiedInstructionList.getInstructionHandles();
+        InstructionHandle gotoHandle = LoopUtils.getGoto(instructionHandles);
+        InstructionHandle firstHandleAfterLoop = gotoHandle.getNext();
+        InstructionHandle lastLoopHandle = gotoHandle.getPrev().getPrev();
+        if (lastLoopHandle instanceof BranchHandle) {
+            ((BranchHandle) lastLoopHandle).setTarget(firstHandleAfterLoop);
+        } else {
+            throw new IllegalStateException("Branch handle is not last instruction of for loop");
+        }
+    }
+
+    private static void adjustLocalVariableTable(MethodGen methodGen) {
+        InstructionHandle[] instructionHandles = methodGen.getInstructionList().getInstructionHandles();
+        Arrays.stream(methodGen.getLocalVariables())
+                .forEach(localVariableGen -> adjustLength(localVariableGen, instructionHandles));
+    }
+
+    private static void adjustLength(LocalVariableGen localVariableGen, InstructionHandle[] instructionHandles) {
+        InstructionHandle start = findByInstruction(localVariableGen.getStart().getInstruction(), instructionHandles);
+        InstructionHandle end = findByInstruction(localVariableGen.getEnd().getInstruction(), instructionHandles);
+        localVariableGen.setStart(start);
+        localVariableGen.setEnd(end);
+    }
+
+    private static InstructionHandle findByInstruction(Instruction instruction, InstructionHandle[] instructionHandles) {
+        return Arrays.stream(instructionHandles)
+                .filter(handle -> handle.getInstruction().equals(instruction))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No matching instruction found for instruction handle."));
+    }
 }

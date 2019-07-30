@@ -8,8 +8,7 @@ import pl.edu.agh.transformations.util.LoopUtils;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class LoopUtilsTests {
 
@@ -100,6 +99,23 @@ public class LoopUtilsTests {
         int loadIndex = ((LoadInstruction) loopInstructions[3].getInstruction()).getIndex();
         assertEquals(EXPECTED_LOOP_END_CONDITION_INDEX, loadIndex);
     }
+
+    @Test
+    public void shouldEmptyLoopBody() throws Exception {
+        ClassGen testClass = new ClassGen(new ClassParser(TEST_2_CLASS_LOCATION).parse());
+        MethodGen testMethod = new MethodGen(testClass.getMethodAt(MAIN_METHOD_INDEX), testClass.getClassName(), testClass.getConstantPool());
+        InstructionHandle[] loopInstructions = LoopUtils.getForLoop(testMethod);
+        InstructionHandle[] emptyLoop = LoopUtils.emptyLoop(loopInstructions);
+        assertTrue(loopInstructions.length != emptyLoop.length);
+    }
+
+//    @Test
+//    public void shouldSetLoopRange() throws Exception {
+//        ClassGen testClass = new ClassGen(new ClassParser(TEST_2_CLASS_LOCATION).parse());
+//        MethodGen testMethod = new MethodGen(testClass.getMethodAt(MAIN_METHOD_INDEX), testClass.getClassName(), testClass.getConstantPool());
+//        InstructionHandle[] loopInstructions = LoopUtils.getForLoop(testMethod);
+//        LoopUtils.setLoopIterationRange(loopInstructions, 16);
+//    }
 
     private int getFirstInstructionPosition(List<InstructionHandle> forLoop) {
         return forLoop.get(FIRST_ITEM_INDEX).getPosition();

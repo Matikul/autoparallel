@@ -16,7 +16,7 @@ public class LoopUtils {
         return getInstructionsBetweenPositions(methodGen.getInstructionList().getInstructionHandles(), startPosition, endPosition);
     }
 
-    private static InstructionHandle getGoto(InstructionHandle[] instructionHandles) {
+    public static InstructionHandle getGoto(InstructionHandle[] instructionHandles) {
         return Arrays.stream(instructionHandles)
                 .filter(handle -> Constants.GOTO_INSTRUCTION_NAME.equals(handle.getInstruction().getName()))
                 .findFirst()
@@ -61,5 +61,12 @@ public class LoopUtils {
 
     public static void updateLoopEndCondition(InstructionHandle[] loopInstructions, int endVariableIndex) {
         loopInstructions[END_CONDITION_INSTRUCTION_INDEX].setInstruction(new ILOAD(endVariableIndex));
+    }
+
+    public static InstructionHandle[] emptyLoop(InstructionHandle[] loopInstructions) {
+        InstructionHandle[] conditionInstructions = Arrays.copyOf(loopInstructions, 5);
+        InstructionHandle[] closingInstructions = Arrays.copyOfRange(loopInstructions, loopInstructions.length - 2, loopInstructions.length);
+        return Stream.concat(Arrays.stream(conditionInstructions), Arrays.stream(closingInstructions))
+                .toArray(InstructionHandle[]::new);
     }
 }
