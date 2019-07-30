@@ -3,6 +3,7 @@ package pl.edu.agh.transformations.util;
 import org.apache.bcel.generic.*;
 
 import java.util.Arrays;
+import java.util.stream.Stream;
 
 public class LoopUtils {
 
