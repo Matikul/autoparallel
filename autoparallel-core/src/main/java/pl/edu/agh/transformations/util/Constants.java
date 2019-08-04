@@ -11,6 +11,7 @@ public class Constants {
     public static final String START_INDEX_VARIABLE_NAME = "start";
     public static final String END_INDEX_VARIABLE_NAME = "end";
     public static final String SUBTASK_METHOD_NAME = "subTask";
+    public static final String LOOP_ITERATOR_NAME = "i";
 
     public static final String GOTO_INSTRUCTION_NAME = "goto";
 }

@@ -238,7 +238,7 @@ public class TransformUtils {
         ConstantFieldref numThreadsField = Arrays.stream(constantPool.getConstantPool())
                 .filter(ConstantFieldref.class::isInstance)
                 .map(ConstantFieldref.class::cast)
-                .filter((constant -> "NUM_THREADS".equals(getConstantName(constantPool, constant))))
+                .filter((constant -> Constants.NUMBER_OF_THREADS_CONSTANT_NAME.equals(getConstantName(constantPool, constant))))
                 .findAny()
                 .orElseThrow(() -> new IllegalStateException("Wrong state - constant NUM_THREADS cannot be found."));
         for (int i = 1; i < constantPool.getConstantPool().length; i++) {
@@ -364,8 +364,8 @@ public class TransformUtils {
 
     private static InstructionList getStartInitInstructions(ClassGen modifiedClass, MethodGen methodGen) {
         InstructionList list = new InstructionList();
-        int loopIteratorIndex = LocalVariableUtils.findLocalVariableByName("i", methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
-        int startVarIndex = LocalVariableUtils.findLocalVariableByName("start", methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
+        int loopIteratorIndex = LocalVariableUtils.findLocalVariableByName(Constants.LOOP_ITERATOR_NAME, methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
+        int startVarIndex = LocalVariableUtils.findLocalVariableByName(Constants.START_INDEX_VARIABLE_NAME, methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
         int numThreadsFieldIndex = getNumThreadsFieldIndex(modifiedClass);
         list.append(new ILOAD(loopIteratorIndex));
         list.append(new SIPUSH(DATA_SIZE));
@@ -378,8 +378,8 @@ public class TransformUtils {
 
     private static InstructionList getEndInitInstructions(ClassGen modifiedClass, MethodGen methodGen) {
         InstructionList list = new InstructionList();
-        int loopIteratorIndex = LocalVariableUtils.findLocalVariableByName("i", methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
-        int endVarIndex = LocalVariableUtils.findLocalVariableByName("end", methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
+        int loopIteratorIndex = LocalVariableUtils.findLocalVariableByName(Constants.LOOP_ITERATOR_NAME, methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
+        int endVarIndex = LocalVariableUtils.findLocalVariableByName(Constants.END_INDEX_VARIABLE_NAME, methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
         int numThreadsFieldIndex = getNumThreadsFieldIndex(modifiedClass);
         list.append(new ILOAD(loopIteratorIndex));
         list.append(new ICONST(1));
@@ -396,8 +396,8 @@ public class TransformUtils {
 
     private static InstructionList getSubtaskCallInstructions(ClassGen modifiedClass, MethodGen methodGen) {
         InstructionList list = new InstructionList();
-        int startVarIndex = LocalVariableUtils.findLocalVariableByName("start", methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
-        int endVarIndex = LocalVariableUtils.findLocalVariableByName("end", methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
+        int startVarIndex = LocalVariableUtils.findLocalVariableByName(Constants.START_INDEX_VARIABLE_NAME, methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
+        int endVarIndex = LocalVariableUtils.findLocalVariableByName(Constants.END_INDEX_VARIABLE_NAME, methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
         int subTaskMethodIndex = getSubTaskMethodIndexInConstants(modifiedClass, methodGen);
         list.append(new ILOAD(startVarIndex));
         list.append(new ILOAD(endVarIndex));
