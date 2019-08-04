@@ -33,6 +33,7 @@ public class BytecodeModifier {
         TransformUtils.copyLoopToMethod(modifiedClass, methodGen);
         TransformUtils.changeLoopLimitToNumberOfThreads(modifiedClass, methodGen);
         TransformUtils.emptyMethodLoop(modifiedClass, methodGen);
+        TransformUtils.setNewLoopBody(modifiedClass, methodGen);
         saveModifiedClass(classPath, className, modifiedClass);
     }
 

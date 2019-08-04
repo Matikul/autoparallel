@@ -3,6 +3,8 @@ package pl.edu.agh.transformations.util;
 import org.apache.bcel.generic.*;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class LoopUtils {
@@ -53,6 +55,24 @@ public class LoopUtils {
             if (localVariableInstruction.getIndex() == oldSlot) {
                 localVariableInstruction.setIndex(newSlot);
             }
+        }
+    }
+
+    public static void broadenCompareCondition(InstructionHandle[] loopInstructions) {
+        List<InstructionHandle> handles = Arrays.stream(loopInstructions)
+                .filter(BranchHandle.class::isInstance)
+                .filter(handle -> !(handle.getInstruction() instanceof GOTO))
+                .collect(Collectors.toList());
+        if (handles.size() != 1) {
+            throw new IllegalStateException("Number of compare instructions in loop condition is different than 1.");
+        }
+        BranchHandle branchHandle = (BranchHandle) handles.get(0);
+        BranchInstruction branchInstruction = (BranchInstruction) branchHandle.getInstruction();
+        if (branchInstruction instanceof IF_ICMPGE) {
+            branchHandle.setInstruction(new IF_ICMPGT(branchHandle.getTarget()));
+        }
+        if (branchInstruction instanceof IF_ICMPLE) {
+            branchHandle.setInstruction(new IF_ICMPLT(branchHandle.getTarget()));
         }
     }
 
