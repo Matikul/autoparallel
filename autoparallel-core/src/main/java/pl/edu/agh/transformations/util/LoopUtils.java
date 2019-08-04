@@ -19,7 +19,7 @@ public class LoopUtils {
         return getInstructionsBetweenPositions(methodGen.getInstructionList().getInstructionHandles(), startPosition, endPosition);
     }
 
-    public static InstructionHandle getGoto(InstructionHandle[] instructionHandles) {
+    static InstructionHandle getGoto(InstructionHandle[] instructionHandles) {
         return Arrays.stream(instructionHandles)
                 .filter(handle -> Constants.GOTO_INSTRUCTION_NAME.equals(handle.getInstruction().getName()))
                 .findFirst()
@@ -58,7 +58,7 @@ public class LoopUtils {
         }
     }
 
-    public static void broadenCompareCondition(InstructionHandle[] loopInstructions) {
+    static void broadenCompareCondition(InstructionHandle[] loopInstructions) {
         List<InstructionHandle> handles = Arrays.stream(loopInstructions)
                 .filter(BranchHandle.class::isInstance)
                 .filter(handle -> !(handle.getInstruction() instanceof GOTO))
@@ -89,5 +89,78 @@ public class LoopUtils {
         InstructionHandle[] closingInstructions = Arrays.copyOfRange(loopInstructions, loopInstructions.length - 2, loopInstructions.length);
         return Stream.concat(Arrays.stream(conditionInstructions), Arrays.stream(closingInstructions))
                 .toArray(InstructionHandle[]::new);
+    }
+
+    static void emptyMethodLoop(MethodGen methodGen, InstructionHandle[] forLoop) {
+        InstructionList modifiedInstructionList = new InstructionList();
+        appendInstructionsUntilLoopStart(modifiedInstructionList, methodGen.getInstructionList().getInstructionHandles(), forLoop[0]);
+        appendAll(modifiedInstructionList, emptyLoop(forLoop));
+        appendInstructionsAfterLoop(modifiedInstructionList, methodGen.getInstructionList().getInstructionHandles(), forLoop[forLoop.length - 1]);
+        retargetEmptyLoopEndCondition(modifiedInstructionList);
+        methodGen.setInstructionList(modifiedInstructionList);
+        adjustLocalVariableTable(methodGen);
+        methodGen.setMaxStack();
+        methodGen.setMaxLocals();
+        methodGen.removeLineNumbers();
+    }
+
+    private static void appendInstructionsUntilLoopStart(InstructionList instructionList, InstructionHandle[] allInstructions, InstructionHandle loopStartInstruction) {
+        for (InstructionHandle handle : allInstructions) {
+            if (handle == loopStartInstruction) {
+                break;
+            } else {
+                appendSingle(instructionList, handle);
+            }
+        }
+    }
+
+    private static void appendSingle(InstructionList instructionList, InstructionHandle handle) {
+        if (handle instanceof BranchHandle) {
+            BranchHandle branch = (BranchHandle) handle;
+            instructionList.append((BranchInstruction) branch.getInstruction().copy());
+        } else {
+            instructionList.append(handle.getInstruction().copy());
+        }
+    }
+
+    private static void appendAll(InstructionList instructionList, InstructionHandle[] allInstructions) {
+        for (InstructionHandle handle : allInstructions) {
+            appendSingle(instructionList, handle);
+        }
+    }
+
+    private static void appendInstructionsAfterLoop(InstructionList instructionList, InstructionHandle[] allInstructions, InstructionHandle loopEndInstruction) {
+        int lastLoopInstructionPosition = Arrays.asList(allInstructions).indexOf(loopEndInstruction);
+        if (lastLoopInstructionPosition == allInstructions.length - 1) {
+            return;
+        }
+        for (int i = lastLoopInstructionPosition + 1; i < allInstructions.length; i++) {
+            appendSingle(instructionList, allInstructions[i]);
+        }
+    }
+
+    private static void retargetEmptyLoopEndCondition(InstructionList modifiedInstructionList) {
+        InstructionHandle[] instructionHandles = modifiedInstructionList.getInstructionHandles();
+        InstructionHandle gotoHandle = LoopUtils.getGoto(instructionHandles);
+        InstructionHandle firstHandleAfterLoop = gotoHandle.getNext();
+        InstructionHandle lastLoopHandle = gotoHandle.getPrev().getPrev();
+        if (lastLoopHandle instanceof BranchHandle) {
+            ((BranchHandle) lastLoopHandle).setTarget(firstHandleAfterLoop);
+        } else {
+            throw new IllegalStateException("Branch handle is not last instruction of for loop");
+        }
+    }
+
+    private static void adjustLocalVariableTable(MethodGen methodGen) {
+        InstructionHandle[] instructionHandles = methodGen.getInstructionList().getInstructionHandles();
+        Arrays.stream(methodGen.getLocalVariables())
+                .forEach(localVariableGen -> adjustLength(localVariableGen, instructionHandles));
+    }
+
+    private static void adjustLength(LocalVariableGen localVariableGen, InstructionHandle[] instructionHandles) {
+        InstructionHandle start = InstructionUtils.findByInstruction(localVariableGen.getStart().getInstruction(), instructionHandles);
+        InstructionHandle end = InstructionUtils.findByInstruction(localVariableGen.getEnd().getInstruction(), instructionHandles);
+        localVariableGen.setStart(start);
+        localVariableGen.setEnd(end);
     }
 }

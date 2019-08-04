@@ -12,8 +12,6 @@ import java.util.concurrent.ExecutorService;
 
 public class TransformUtils {
 
-    private static final short DATA_SIZE = 16;//TODO HARDCODED, AS SHORT - need to read it somehow/get by parameter
-
     public static void addThreadPool(ClassGen classGen) {
         ConstantPoolGen constantPoolGen = classGen.getConstantPool();
         addClassFields(classGen, constantPoolGen);
@@ -228,112 +226,15 @@ public class TransformUtils {
 
     public static void changeLoopLimitToNumberOfThreads(ClassGen classGen, MethodGen methodGen) {
         InstructionHandle[] forLoop = LoopUtils.getForLoop(methodGen);
-        int numThreadsConstantIndex = getNumThreadsFieldIndex(classGen);
+        int numThreadsConstantIndex = ConstantPoolUtils.getNumThreadsFieldIndex(classGen);
         forLoop[3].setInstruction(new GETSTATIC(numThreadsConstantIndex));
         classGen.replaceMethod(methodGen.getMethod(), methodGen.getMethod());
     }
 
-    private static int getNumThreadsFieldIndex(ClassGen classGen) {
-        ConstantPool constantPool = classGen.getConstantPool().getConstantPool();
-        ConstantFieldref numThreadsField = Arrays.stream(constantPool.getConstantPool())
-                .filter(ConstantFieldref.class::isInstance)
-                .map(ConstantFieldref.class::cast)
-                .filter((constant -> Constants.NUMBER_OF_THREADS_CONSTANT_NAME.equals(getConstantName(constantPool, constant))))
-                .findAny()
-                .orElseThrow(() -> new IllegalStateException("Wrong state - constant NUM_THREADS cannot be found."));
-        for (int i = 1; i < constantPool.getConstantPool().length; i++) {
-            if (constantPool.getConstantPool()[i].equals(numThreadsField)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    private static String getConstantName(ConstantPool constantPool, ConstantFieldref constant) {
-        ConstantNameAndType constantNameAndType = (ConstantNameAndType) constantPool.getConstantPool()[constant.getNameAndTypeIndex()];
-        return constantNameAndType.getName(constantPool);
-    }
-
     public static void emptyMethodLoop(ClassGen classGen, MethodGen methodGen) {
         InstructionHandle[] forLoop = LoopUtils.getForLoop(methodGen);
-        InstructionList modifiedInstructionList = new InstructionList();
-        appendInstructionsUntilLoopStart(modifiedInstructionList, methodGen.getInstructionList().getInstructionHandles(), forLoop[0]);
-        appendAll(modifiedInstructionList, LoopUtils.emptyLoop(forLoop));
-        appendInstructionsAfterLoop(modifiedInstructionList, methodGen.getInstructionList().getInstructionHandles(), forLoop[forLoop.length - 1]);
-        retargetEmptyLoopEndCondition(modifiedInstructionList);
-        methodGen.setInstructionList(modifiedInstructionList);
-        adjustLocalVariableTable(methodGen);
-        methodGen.setMaxStack();
-        methodGen.setMaxLocals();
-        methodGen.removeLineNumbers();
+        LoopUtils.emptyMethodLoop(methodGen, forLoop);
         classGen.replaceMethod(methodGen.getMethod(), methodGen.getMethod());
-    }
-
-    private static void appendInstructionsUntilLoopStart(InstructionList instructionList, InstructionHandle[] allInstructions, InstructionHandle loopStartInstruction) {
-        for (InstructionHandle handle : allInstructions) {
-            if (handle == loopStartInstruction) {
-                break;
-            } else {
-                appendSingle(instructionList, handle);
-            }
-        }
-    }
-
-    private static void appendSingle(InstructionList instructionList, InstructionHandle handle) {
-        if (handle instanceof BranchHandle) {
-            BranchHandle branch = (BranchHandle) handle;
-            instructionList.append((BranchInstruction) branch.getInstruction().copy());
-        } else {
-            instructionList.append(handle.getInstruction().copy());
-        }
-    }
-
-    private static void appendAll(InstructionList instructionList, InstructionHandle[] allInstructions) {
-        for (InstructionHandle handle : allInstructions) {
-            appendSingle(instructionList, handle);
-        }
-    }
-
-    private static void appendInstructionsAfterLoop(InstructionList instructionList, InstructionHandle[] allInstructions, InstructionHandle loopEndInstruction) {
-        int lastLoopInstructionPosition = Arrays.asList(allInstructions).indexOf(loopEndInstruction);
-        if (lastLoopInstructionPosition == allInstructions.length - 1) {
-            return;
-        }
-        for (int i = lastLoopInstructionPosition + 1; i < allInstructions.length; i++) {
-            appendSingle(instructionList, allInstructions[i]);
-        }
-    }
-
-    private static void retargetEmptyLoopEndCondition(InstructionList modifiedInstructionList) {
-        InstructionHandle[] instructionHandles = modifiedInstructionList.getInstructionHandles();
-        InstructionHandle gotoHandle = LoopUtils.getGoto(instructionHandles);
-        InstructionHandle firstHandleAfterLoop = gotoHandle.getNext();
-        InstructionHandle lastLoopHandle = gotoHandle.getPrev().getPrev();
-        if (lastLoopHandle instanceof BranchHandle) {
-            ((BranchHandle) lastLoopHandle).setTarget(firstHandleAfterLoop);
-        } else {
-            throw new IllegalStateException("Branch handle is not last instruction of for loop");
-        }
-    }
-
-    private static void adjustLocalVariableTable(MethodGen methodGen) {
-        InstructionHandle[] instructionHandles = methodGen.getInstructionList().getInstructionHandles();
-        Arrays.stream(methodGen.getLocalVariables())
-                .forEach(localVariableGen -> adjustLength(localVariableGen, instructionHandles));
-    }
-
-    private static void adjustLength(LocalVariableGen localVariableGen, InstructionHandle[] instructionHandles) {
-        InstructionHandle start = findByInstruction(localVariableGen.getStart().getInstruction(), instructionHandles);
-        InstructionHandle end = findByInstruction(localVariableGen.getEnd().getInstruction(), instructionHandles);
-        localVariableGen.setStart(start);
-        localVariableGen.setEnd(end);
-    }
-
-    private static InstructionHandle findByInstruction(Instruction instruction, InstructionHandle[] instructionHandles) {
-        return Arrays.stream(instructionHandles)
-                .filter(handle -> handle.getInstruction().equals(instruction))
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("No matching instruction found for instruction handle."));
     }
 
     public static void setNewLoopBody(ClassGen modifiedClass, MethodGen methodGen) {
@@ -350,79 +251,15 @@ public class TransformUtils {
                                    Type.INT,
                                    firstLoopInstruction,
                                    lastLoopInstruction);
-        InstructionList startInitInstructions = getStartInitInstructions(modifiedClass, methodGen);
+        InstructionList startInitInstructions = InstructionUtils.getStartInitInstructions(modifiedClass, methodGen);
         InstructionHandle endOfStartInit = startInitInstructions.getEnd();
-        InstructionList endInitInstructions = getEndInitInstructions(modifiedClass, methodGen);
+        InstructionList endInitInstructions = InstructionUtils.getEndInitInstructions(modifiedClass, methodGen);
         InstructionHandle endOfEndInit = endInitInstructions.getEnd();
-        InstructionList subtaskCallInstructions = getSubtaskCallInstructions(modifiedClass, methodGen);
+        InstructionList subtaskCallInstructions = InstructionUtils.getSubtaskCallInstructions(modifiedClass, methodGen);
         allInstructionsList.append(lastInstructionBeforeLoopBody, startInitInstructions);
         allInstructionsList.append(endOfStartInit, endInitInstructions);
         allInstructionsList.append(endOfEndInit, subtaskCallInstructions);
         methodGen.setMaxStack();
         modifiedClass.replaceMethod(methodGen.getMethod(), methodGen.getMethod());
-    }
-
-    private static InstructionList getStartInitInstructions(ClassGen modifiedClass, MethodGen methodGen) {
-        InstructionList list = new InstructionList();
-        int loopIteratorIndex = LocalVariableUtils.findLocalVariableByName(Constants.LOOP_ITERATOR_NAME, methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
-        int startVarIndex = LocalVariableUtils.findLocalVariableByName(Constants.START_INDEX_VARIABLE_NAME, methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
-        int numThreadsFieldIndex = getNumThreadsFieldIndex(modifiedClass);
-        list.append(new ILOAD(loopIteratorIndex));
-        list.append(new SIPUSH(DATA_SIZE));
-        list.append(new GETSTATIC(numThreadsFieldIndex));
-        list.append(new IDIV());
-        list.append(new IMUL());
-        list.append(new ISTORE(startVarIndex));
-        return list;
-    }
-
-    private static InstructionList getEndInitInstructions(ClassGen modifiedClass, MethodGen methodGen) {
-        InstructionList list = new InstructionList();
-        int loopIteratorIndex = LocalVariableUtils.findLocalVariableByName(Constants.LOOP_ITERATOR_NAME, methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
-        int endVarIndex = LocalVariableUtils.findLocalVariableByName(Constants.END_INDEX_VARIABLE_NAME, methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
-        int numThreadsFieldIndex = getNumThreadsFieldIndex(modifiedClass);
-        list.append(new ILOAD(loopIteratorIndex));
-        list.append(new ICONST(1));
-        list.append(new IADD());
-        list.append(new SIPUSH(DATA_SIZE));
-        list.append(new GETSTATIC(numThreadsFieldIndex));
-        list.append(new IDIV());
-        list.append(new IMUL());
-        list.append(new ICONST(1));
-        list.append(new ISUB());
-        list.append(new ISTORE(endVarIndex));
-        return list;
-    }
-
-    private static InstructionList getSubtaskCallInstructions(ClassGen modifiedClass, MethodGen methodGen) {
-        InstructionList list = new InstructionList();
-        int startVarIndex = LocalVariableUtils.findLocalVariableByName(Constants.START_INDEX_VARIABLE_NAME, methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
-        int endVarIndex = LocalVariableUtils.findLocalVariableByName(Constants.END_INDEX_VARIABLE_NAME, methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
-        int subTaskMethodIndex = getSubTaskMethodIndexInConstants(modifiedClass, methodGen);
-        list.append(new ILOAD(startVarIndex));
-        list.append(new ILOAD(endVarIndex));
-        list.append(new INVOKESTATIC(subTaskMethodIndex));
-        return list;
-    }
-
-    private static int getSubTaskMethodIndexInConstants(ClassGen modifiedClass, MethodGen methodGen) {
-        ConstantPool constantPool = modifiedClass.getConstantPool().getConstantPool();
-        ConstantMethodref subTaskMethod = Arrays.stream(constantPool.getConstantPool())
-                .filter(ConstantMethodref.class::isInstance)
-                .map(ConstantMethodref.class::cast)
-                .filter(method -> "subTask".equals(getMethodName(constantPool, method)))
-                .findAny()
-                .orElseThrow(() -> new IllegalStateException("No subTask method found."));
-        for (int i = 1; i < constantPool.getConstantPool().length; i++) {
-            if (constantPool.getConstantPool()[i].equals(subTaskMethod)) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    private static String getMethodName(ConstantPool constantPool, ConstantMethodref method) {
-        ConstantNameAndType constantNameAndType = (ConstantNameAndType) constantPool.getConstantPool()[method.getNameAndTypeIndex()];
-        return constantNameAndType.getName(constantPool);
     }
 }
