@@ -28,8 +28,8 @@ class ConstantPoolUtils {
         return constantNameAndType.getName(constantPool);
     }
 
-    static int getSubTaskMethodIndexInConstants(ClassGen modifiedClass) {
-        ConstantPool constantPool = modifiedClass.getConstantPool().getConstantPool();
+    static int getSubTaskMethodIndexInConstants(ClassGen classGen) {
+        ConstantPool constantPool = classGen.getConstantPool().getConstantPool();
         ConstantMethodref subTaskMethod = Arrays.stream(constantPool.getConstantPool())
                 .filter(ConstantMethodref.class::isInstance)
                 .map(ConstantMethodref.class::cast)
@@ -42,5 +42,12 @@ class ConstantPoolUtils {
             }
         }
         return -1;
+    }
+
+    static int getInnerClassNameIndex(ClassGen classGen, String innerClassName) {
+//        ConstantPool constantPool = classGen.getConstantPool().getConstantPool();
+//        Arrays.stream(constantPool.getConstantPool())
+//                .filter()
+        return 0;
     }
 }

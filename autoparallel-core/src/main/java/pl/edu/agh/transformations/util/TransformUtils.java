@@ -1,10 +1,6 @@
 package pl.edu.agh.transformations.util;
 
 import org.apache.bcel.Const;
-import org.apache.bcel.classfile.ConstantFieldref;
-import org.apache.bcel.classfile.ConstantMethodref;
-import org.apache.bcel.classfile.ConstantNameAndType;
-import org.apache.bcel.classfile.ConstantPool;
 import org.apache.bcel.generic.*;
 
 import java.util.Arrays;

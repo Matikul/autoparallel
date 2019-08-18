@@ -6,6 +6,7 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ClassGen;
 import org.apache.bcel.generic.MethodGen;
+import pl.edu.agh.transformations.util.AnonymousClassUtils;
 import pl.edu.agh.transformations.util.TransformUtils;
 
 import java.io.FileOutputStream;
@@ -34,6 +35,14 @@ public class BytecodeModifier {
         TransformUtils.changeLoopLimitToNumberOfThreads(modifiedClass, methodGen);
         TransformUtils.emptyMethodLoop(modifiedClass, methodGen);
         TransformUtils.setNewLoopBody(modifiedClass, methodGen);
+//        saveModifiedClass(classPath, className, modifiedClass);
+
+//        JavaClass parallelizedClass = new ClassParser(classPath + "\\" + className + MODIFICATION_SUFFIX + CLASS_SUFFIX).parse();
+//        modifiedClass = new ClassGen(parallelizedClass);
+        //TODO VERY unsafe method retrieval
+//        transformedMethod = modifiedClass.getMethodAt(methodPosition + 1);
+//        methodGen = new MethodGen(transformedMethod, modifiedClass.getClassName(), modifiedClass.getConstantPool());
+        AnonymousClassUtils.addCallableCall(analyzedClass, modifiedClass, methodGen, classPath);
         saveModifiedClass(classPath, className, modifiedClass);
     }
 
