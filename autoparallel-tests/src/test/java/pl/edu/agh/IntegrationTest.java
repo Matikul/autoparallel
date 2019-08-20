@@ -1,5 +1,6 @@
 package pl.edu.agh;
 
+import org.apache.bcel.generic.TargetLostException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import pl.edu.agh.transformations.BytecodeModifier;
@@ -24,7 +25,7 @@ public class IntegrationTest {
 
     @Test
     @SuppressWarnings("Duplicates")
-    public void modifiedClassRunTest() throws IOException {
+    public void modifiedClassRunTest() throws IOException, TargetLostException {
         modifier.modifyBytecode(TEST_CLASS_LOCATION, TEST_CLASS_NAME, MODIFIED_METHOD_POSITION);
         Runtime runtime = Runtime.getRuntime();
         String command = System.getProperty("java.home") + "\\bin\\java -cp " + TEST_CLASS_LOCATION + " " + TEST_CLASS_NAME + BytecodeModifier.MODIFICATION_SUFFIX;
@@ -39,7 +40,7 @@ public class IntegrationTest {
 
     @Test
     @SuppressWarnings("Duplicates")
-    public void test() throws IOException {
+    public void test() throws IOException, TargetLostException {
         modifier.modifyBytecode(TEST_CLASS_LOCATION, TEST_CLASS_NAME, MODIFIED_METHOD_POSITION);
         Runtime runtime = Runtime.getRuntime();
         String command = System.getProperty("java.home") + "\\bin\\java -cp " + TEST_CLASS_LOCATION + " " + TEST_CLASS_NAME + BytecodeModifier.MODIFICATION_SUFFIX;

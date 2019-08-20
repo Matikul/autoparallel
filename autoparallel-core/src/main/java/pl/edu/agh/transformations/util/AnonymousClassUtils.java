@@ -10,14 +10,25 @@ import java.util.Arrays;
 
 public class AnonymousClassUtils {
 
-    public static void addCallableCall(JavaClass analyzedClass, ClassGen classGen, MethodGen methodGen, String classPath) {
+    public static void addCallableCall(ClassGen classGen, String classPath) throws IOException, TargetLostException {
         InnerClassData innerClassData = addAnonymousClassConstants(classGen);
         redumpClassGen(classGen, classPath);
 
+        JavaClass analyzedClass = new ClassParser(classPath + "\\" + classGen.getClassName() + ".class").parse();
+        classGen = new ClassGen(analyzedClass);
+
         addInnerClassAttribute(analyzedClass, classGen, innerClassData, classPath);
+
+        analyzedClass = new ClassParser(classPath + "\\" + classGen.getClassName() + ".class").parse();
+        classGen = new ClassGen(analyzedClass);
+        //TODO VERY BAD getMethodAt!!!!:
+        MethodGen methodGen = new MethodGen(classGen.getMethodAt(2), classGen.getClassName(), classGen.getConstantPool());
+
         InstructionList allMethodInstructions = methodGen.getInstructionList();
         InstructionHandle[] forLoop = LoopUtils.getForLoop(methodGen);
-        InstructionHandle lastLoopHandle = forLoop[forLoop.length - 3];
+        removeSubtaskCall(allMethodInstructions, forLoop);
+        forLoop = LoopUtils.getForLoop(methodGen);
+        InstructionHandle lastLoopBodyHandle = forLoop[forLoop.length - 3];
 
         ConstantPoolGen constantPool = classGen.getConstantPool();
         LocalVariableTable localVariableTable = methodGen.getLocalVariableTable(constantPool);
@@ -39,11 +50,43 @@ public class AnonymousClassUtils {
                                                                      new Type[] {Type.getType("Ljava/lang/Object;")},
                                                                      Const.INVOKEINTERFACE));
         addedInstructionsList.append(new POP());
+        allMethodInstructions.append(lastLoopBodyHandle, addedInstructionsList);
 
-        allMethodInstructions.append(lastLoopHandle, addedInstructionsList);
+        forLoop = LoopUtils.getForLoop(methodGen);
+        InstructionHandle lastLoopHandle = forLoop[forLoop.length - 1];
+        int executorIndex = ConstantPoolUtils.getFieldIndex(classGen, Constants.EXECUTOR_SERVICE_CONSTANT_NAME);
+        InstructionList invokeInstructions = new InstructionList();
+        invokeInstructions.append(new GETSTATIC(executorIndex));
+        invokeInstructions.append(new ALOAD(tasksListIndex));
+        invokeInstructions.append(instructionFactory.createInvoke("java/util/concurrent/ExecutorService",
+                                                                  "invokeAll",
+                                                                  Type.getType("Ljava/util/List;"),
+                                                                  new Type[]{Type.getType("Ljava/util/Collection;")},
+                                                                  Const.INVOKEINTERFACE));
+        //STORE in partialResults
+        int resultsIndex = LocalVariableUtils.findLocalVariableByName(Constants.RESULTS_POOL_NAME, localVariableTable).getIndex();
+//        invokeInstructions.append(new ASTORE(resultsIndex));
+        invokeInstructions.append(new POP());
+
+        //Call get to obtain results
+//        invokeInstructions.append()
+
+        //Add shutdown
+        invokeInstructions.append(new GETSTATIC(executorIndex));
+        invokeInstructions.append(instructionFactory.createInvoke("java/util/concurrent/ExecutorService",
+                                                                  "shutdown",
+                                                                  Type.VOID,
+                                                                  new Type[]{},
+                                                                  Const.INVOKEINTERFACE));
+
+        allMethodInstructions.append(lastLoopHandle, invokeInstructions);
+
+        //retarget IF condition to leave loop properly
+        LoopUtils.retargetLoopInInstructionsToFirstAfterLoop(methodGen);
 
         methodGen.setMaxStack();
         classGen.replaceMethod(methodGen.getMethod(), methodGen.getMethod());
+        redumpClassGen(classGen, classPath);
     }
 
     public static InnerClassData addAnonymousClassConstants(ClassGen classGen) {
@@ -65,14 +108,12 @@ public class AnonymousClassUtils {
     }
 
     private static void addInnerClassAttribute(JavaClass analyzedClass, ClassGen classGen, InnerClassData innerClassData, String classPath) {
-        analyzedClass = classGen.getJavaClass();//TODO CHECK CORRECTNESS
         Attribute[] oldAttributes = analyzedClass.getAttributes();
         Attribute[] newAttributes = Arrays.copyOf(oldAttributes, oldAttributes.length + 1);
-        String innerClassName = analyzedClass.getClassName() + "$1";
         InnerClass innerClass = new InnerClass(innerClassData.classIndex,
-                                               39/*TODO TEMP*/,
-                                               78/*ConstantPoolUtils.getInnerClassNameIndex(classGen, innerClassName)*/,
-                                               0);
+                                               0,
+                                               0,
+                                               Const.ACC_STATIC);
         InnerClasses innerClasses = new InnerClasses(innerClassData.innerClassesNameIndex, 10, new InnerClass[]{innerClass}, classGen.getConstantPool().getConstantPool());
         newAttributes[newAttributes.length - 1] = innerClasses;
         analyzedClass.setAttributes(newAttributes);
@@ -88,6 +129,12 @@ public class AnonymousClassUtils {
         } catch (IOException exception) {
             throw new RuntimeException("Error during modified class save.", exception);
         }
+    }
+
+    private static void removeSubtaskCall(InstructionList allMethodInstructions, InstructionHandle[] forLoop) throws TargetLostException {
+        InstructionHandle firstCallHandle = forLoop[forLoop.length - 5];
+        InstructionHandle lastCallHandle = forLoop[forLoop.length - 3];
+        allMethodInstructions.delete(firstCallHandle, lastCallHandle);
     }
 
     public static class InnerClassData {

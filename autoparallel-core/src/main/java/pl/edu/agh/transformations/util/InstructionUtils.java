@@ -19,7 +19,7 @@ class InstructionUtils {
         InstructionList list = new InstructionList();
         int loopIteratorIndex = LocalVariableUtils.findLocalVariableByName(Constants.LOOP_ITERATOR_NAME, methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
         int startVarIndex = LocalVariableUtils.findLocalVariableByName(Constants.START_INDEX_VARIABLE_NAME, methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
-        int numThreadsFieldIndex = ConstantPoolUtils.getNumThreadsFieldIndex(modifiedClass);
+        int numThreadsFieldIndex = ConstantPoolUtils.getFieldIndex(modifiedClass, Constants.NUMBER_OF_THREADS_CONSTANT_NAME);
         list.append(new ILOAD(loopIteratorIndex));
         list.append(new SIPUSH(DATA_SIZE));
         list.append(new GETSTATIC(numThreadsFieldIndex));
@@ -33,7 +33,7 @@ class InstructionUtils {
         InstructionList list = new InstructionList();
         int loopIteratorIndex = LocalVariableUtils.findLocalVariableByName(Constants.LOOP_ITERATOR_NAME, methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
         int endVarIndex = LocalVariableUtils.findLocalVariableByName(Constants.END_INDEX_VARIABLE_NAME, methodGen.getLocalVariableTable(modifiedClass.getConstantPool())).getIndex();
-        int numThreadsFieldIndex = ConstantPoolUtils.getNumThreadsFieldIndex(modifiedClass);
+        int numThreadsFieldIndex = ConstantPoolUtils.getFieldIndex(modifiedClass, Constants.NUMBER_OF_THREADS_CONSTANT_NAME);
         list.append(new ILOAD(loopIteratorIndex));
         list.append(new ICONST(1));
         list.append(new IADD());

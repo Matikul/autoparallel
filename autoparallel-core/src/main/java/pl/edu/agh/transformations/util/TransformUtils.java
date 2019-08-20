@@ -147,13 +147,15 @@ public class TransformUtils {
     public static void copyLoopToMethod(ClassGen classGen, MethodGen methodGen) {
 
         InstructionList subTaskInstructionList = getSubtaskInstructions(methodGen);
-        subTaskInstructionList.append(InstructionFactory.createReturn(methodGen.getReturnType()));
+
+        subTaskInstructionList.append(new ICONST(1));
+        subTaskInstructionList.append(InstructionFactory.createReturn(Type.INT));//TODO - RETURN TYPE IS HARDCODED
 
         int previousLoopVariableSlot = ((StoreInstruction) (subTaskInstructionList.getInstructions()[1])).getIndex();
         LocalVariableGen loopVariable = methodGen.getLocalVariables()[previousLoopVariableSlot];
 
-        MethodGen subTaskMethod = new MethodGen(Const.ACC_PRIVATE | Const.ACC_STATIC,
-                                                methodGen.getReturnType(),
+        MethodGen subTaskMethod = new MethodGen(Const.ACC_PUBLIC | Const.ACC_STATIC,
+                                                Type.INT,//TODO - RETURN TYPE IS HARDCODED
                                                 new Type[]{},
                                                 new String[]{},
                                                 Constants.SUBTASK_METHOD_NAME,
@@ -201,7 +203,7 @@ public class TransformUtils {
     }
 
     private static void updateBranchInstructions(InstructionList instructions) {
-        InstructionHandle returnHandle = instructions.getInstructionHandles()[instructions.getInstructionHandles().length - 1];
+        InstructionHandle returnHandle = instructions.getInstructionHandles()[instructions.getInstructionHandles().length - 2];
         InstructionHandle loopBeginning = instructions.getInstructionHandles()[2];
         Arrays.stream(instructions.getInstructionHandles())
                 .filter(BranchHandle.class::isInstance)
@@ -222,7 +224,7 @@ public class TransformUtils {
 
     public static void changeLoopLimitToNumberOfThreads(ClassGen classGen, MethodGen methodGen) {
         InstructionHandle[] forLoop = LoopUtils.getForLoop(methodGen);
-        int numThreadsConstantIndex = ConstantPoolUtils.getNumThreadsFieldIndex(classGen);
+        int numThreadsConstantIndex = ConstantPoolUtils.getFieldIndex(classGen, Constants.NUMBER_OF_THREADS_CONSTANT_NAME);
         forLoop[3].setInstruction(new GETSTATIC(numThreadsConstantIndex));
         classGen.replaceMethod(methodGen.getMethod(), methodGen.getMethod());
     }

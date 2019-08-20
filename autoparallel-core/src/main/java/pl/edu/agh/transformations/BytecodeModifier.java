@@ -6,6 +6,7 @@ import org.apache.bcel.classfile.JavaClass;
 import org.apache.bcel.classfile.Method;
 import org.apache.bcel.generic.ClassGen;
 import org.apache.bcel.generic.MethodGen;
+import org.apache.bcel.generic.TargetLostException;
 import pl.edu.agh.transformations.util.AnonymousClassUtils;
 import pl.edu.agh.transformations.util.TransformUtils;
 
@@ -19,7 +20,7 @@ public class BytecodeModifier {
     private static final String CLASS_SUFFIX = ".class";
     private static final String JAVA_SUFFIX = ".java";
 
-    public void modifyBytecode(String classPath, String className, int methodPosition) throws IOException {
+    public void modifyBytecode(String classPath, String className, int methodPosition) throws IOException, TargetLostException {
         JavaClass analyzedClass = new ClassParser(classPath + "\\" + className + CLASS_SUFFIX).parse();
         ClassGen modifiedClass = getModifiedClass(className, analyzedClass);
         copyMethods(analyzedClass, modifiedClass);
@@ -42,7 +43,14 @@ public class BytecodeModifier {
         //TODO VERY unsafe method retrieval
 //        transformedMethod = modifiedClass.getMethodAt(methodPosition + 1);
 //        methodGen = new MethodGen(transformedMethod, modifiedClass.getClassName(), modifiedClass.getConstantPool());
-        AnonymousClassUtils.addCallableCall(analyzedClass, modifiedClass, methodGen, classPath);
+        AnonymousClassUtils.addCallableCall(modifiedClass, classPath);
+
+        analyzedClass = new ClassParser(classPath + "\\" + className + MODIFICATION_SUFFIX + CLASS_SUFFIX).parse();
+        modifiedClass = new ClassGen(analyzedClass);
+        methodGen = new MethodGen(modifiedClass.getMethodAt(methodPosition + 1), modifiedClass.getClassName(), modifiedClass.getConstantPool());
+
+//        ExecutorUtils.addExecutorInvocation(modifiedClass, methodGen);
+
         saveModifiedClass(classPath, className, modifiedClass);
     }
 

@@ -7,14 +7,14 @@ import java.util.Arrays;
 
 class ConstantPoolUtils {
 
-    static int getNumThreadsFieldIndex(ClassGen classGen) {
+    static int getFieldIndex(ClassGen classGen, String constantName) {
         ConstantPool constantPool = classGen.getConstantPool().getConstantPool();
         ConstantFieldref numThreadsField = Arrays.stream(constantPool.getConstantPool())
                 .filter(ConstantFieldref.class::isInstance)
                 .map(ConstantFieldref.class::cast)
-                .filter((constant -> Constants.NUMBER_OF_THREADS_CONSTANT_NAME.equals(getConstantName(constantPool, constant))))
+                .filter((constant -> constantName.equals(getConstantName(constantPool, constant))))
                 .findAny()
-                .orElseThrow(() -> new IllegalStateException("Wrong state - constant NUM_THREADS cannot be found."));
+                .orElseThrow(() -> new IllegalStateException("Wrong state - constant " + constantName + " cannot be found."));
         for (int i = 1; i < constantPool.getConstantPool().length; i++) {
             if (constantPool.getConstantPool()[i].equals(numThreadsField)) {
                 return i;

@@ -163,4 +163,17 @@ public class LoopUtils {
         localVariableGen.setStart(start);
         localVariableGen.setEnd(end);
     }
+
+    public static void retargetLoopInInstructionsToFirstAfterLoop(MethodGen methodGen) {
+        InstructionHandle[] forLoop = getForLoop(methodGen);
+        InstructionHandle firstInstructionAfterLoop = getGoto(methodGen.getInstructionList().getInstructionHandles()).getNext();
+        retargetLoopToInstruction(forLoop, firstInstructionAfterLoop);
+    }
+
+    private static void retargetLoopToInstruction(InstructionHandle[] forLoop, InstructionHandle firstInstructionAfterLoop) {
+        Arrays.stream(forLoop)
+                .filter(handle -> handle.getInstruction() instanceof IfInstruction)
+                .map(BranchHandle.class::cast)
+                .forEach(handle -> handle.setTarget(firstInstructionAfterLoop));
+    }
 }
