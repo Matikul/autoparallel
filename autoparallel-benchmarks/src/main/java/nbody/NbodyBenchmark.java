@@ -28,31 +28,12 @@ public class NbodyBenchmark {
     }
 
     @Benchmark
-    public void serialNbodyBenchmark(TestState state) {
-        state.serialNbody.simulate(steps);
+    public void serialNbodyBenchmark() {
+        SerialNbody.simulate(steps);
     }
 
     @Benchmark
-    public void parallelNbodyBenchmark(TestState state) {
-        state.parallelNbody.simulate(steps);
-    }
-
-    @State(value = Scope.Benchmark)
-    public static class TestState {
-        int numBodies = 1000;
-        Body[] bodies = generateBodies(numBodies);
-        SerialNbody serialNbody = new SerialNbody(bodies);
-        ParallelNbody parallelNbody = new ParallelNbody(bodies);
-
-        Body[] generateBodies(int numBodies) {
-            Body[] bodies = new Body[numBodies];
-            Random random = new Random();
-            for (int i = 0; i < numBodies; i++) {
-                bodies[i] = new Body(random.nextDouble() / 10,
-                        random.nextDouble() / 10,
-                        (random.nextDouble() * 100 + 200));
-            }
-            return bodies;
-        }
+    public void parallelNbodyBenchmark() {
+        ParallelNbody.simulate(steps);
     }
 }

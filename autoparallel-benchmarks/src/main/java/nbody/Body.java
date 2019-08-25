@@ -1,12 +1,17 @@
 package nbody;
 
-class Body {
+import java.io.Serializable;
+
+public class Body implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     private static final double G = 6.67e-11;
 
-    double x, y;
-    double vx, vy;
-    double ax, ay;
-    double mass;
+    public double x, y;
+    public double vx, vy;
+    public double ax, ay;
+    public double mass;
 
     Body(double x, double y, double mass) {
         this.x = x;
@@ -18,7 +23,7 @@ class Body {
         this.mass = mass;
     }
 
-    Body(Body other) {
+    public Body(Body other) {
         this.x = other.x;
         this.y = other.y;
         this.vx = other.vx;
@@ -28,7 +33,7 @@ class Body {
         this.mass = other.mass;
     }
 
-    double pairForceX(Body otherBody) {
+    public double pairForceX(Body otherBody) {
         double dx = otherBody.x - this.x;
         double distance = this.distance(otherBody);
         if (distance == 0.0) {
@@ -37,7 +42,7 @@ class Body {
         return this.pairForce(otherBody) * dx / distance;
     }
 
-    double pairForceY(Body otherBody) {
+    public double pairForceY(Body otherBody) {
         double dy = otherBody.y - this.y;
         double distance = this.distance(otherBody);
         if (distance == 0.0) {

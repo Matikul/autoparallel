@@ -1,34 +1,41 @@
 package nbody;
 
+import util.DataInitializer;
+
 public class SerialNbody {
 
-    public final Body[] bodies;
+    private static final Body[] bodies = DataInitializer.initBodiesFromFile();
+    private static Body[] beginningState;
 
     private static final double dt = 0.001;
 
-    SerialNbody(Body[] bodies) {
-        this.bodies = bodies;
+    public static Body[] getBodies() {
+        return bodies;
     }
 
-    void simulate(int steps) {
+    public static void simulate(int steps) {
         for (int i = 0; i < steps; i++) {
             moveBodies();
         }
     }
 
-    private void moveBodies() {
+    private static void moveBodies() {
         int dataSize = bodies.length;
-        Body[] beginningState = new Body[dataSize];//Arrays.copyOf(bodies, bodies.length);
-        for (int i = 0; i < dataSize; i++) {
-            beginningState[i] = new Body(bodies[i]);
-        }
+        refreshBeginningState(dataSize);
         for (int i = 0; i < dataSize; i++) {
             Body body = bodies[i];
-            updateState(body, beginningState);
+            updateState(body);
         }
     }
 
-    private void updateState(Body body, Body[] beginningState) {
+    private static void refreshBeginningState(int dataSize) {
+        beginningState = new Body[dataSize];
+        for (int i = 0; i < dataSize; i++) {
+            beginningState[i] = new Body(bodies[i]);
+        }
+    }
+
+    private static void updateState(Body body) {
         double netForceX = 0.0;
         double netForceY = 0.0;
         for (Body otherBody : beginningState) {
