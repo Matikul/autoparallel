@@ -2,7 +2,7 @@ package nbody;
 
 public class NbodyTest {
 
-    private static final int steps = 10000;
+    private static final int steps = 100;
 
     public static void main(String[] args) {
 

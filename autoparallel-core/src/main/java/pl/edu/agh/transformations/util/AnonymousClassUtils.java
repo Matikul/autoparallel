@@ -21,8 +21,8 @@ public class AnonymousClassUtils {
 
         analyzedClass = new ClassParser(classPath + "\\" + classGen.getClassName() + ".class").parse();
         classGen = new ClassGen(analyzedClass);
-        //TODO VERY BAD getMethodAt!!!!:
-        MethodGen methodGen = new MethodGen(classGen.getMethodAt(2), classGen.getClassName(), classGen.getConstantPool());
+//        MethodGen methodGen = new MethodGen(MethodUtils.findMethodByNameOrThrow(classGen, "main").getMethod(), classGen.getClassName(), classGen.getConstantPool());
+        MethodGen methodGen = new MethodGen(MethodUtils.findMethodByNameOrThrow(classGen, "moveBodies").getMethod(), classGen.getClassName(), classGen.getConstantPool());
 
         InstructionList allMethodInstructions = methodGen.getInstructionList();
         InstructionHandle[] forLoop = LoopUtils.getForLoop(methodGen);
@@ -69,7 +69,7 @@ public class AnonymousClassUtils {
         invokeInstructions.append(new POP());
 
         //Call get to obtain results
-//        invokeInstructions.append()
+//        invokeInstructions.append();
 
         //Add shutdown
         invokeInstructions.append(new GETSTATIC(executorIndex));

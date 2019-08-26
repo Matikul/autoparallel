@@ -1,17 +1,33 @@
 package pl.edu.agh.transformations.util;
 
 import org.apache.bcel.Const;
+import org.apache.bcel.classfile.Constant;
+import org.apache.bcel.classfile.ConstantFieldref;
+import org.apache.bcel.classfile.LocalVariable;
 import org.apache.bcel.generic.*;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 public class TransformUtils {
 
     public static void addThreadPool(ClassGen classGen) {
+        Optional<MethodGen> classInitMethod = MethodUtils.findMethodByName(classGen, Const.STATIC_INITIALIZER_NAME);
         ConstantPoolGen constantPoolGen = classGen.getConstantPool();
         addClassFields(classGen, constantPoolGen);
         InstructionList instructionList = new InstructionList();
+        classInitMethod.ifPresent(init -> {
+            instructionList.append(init.getInstructionList());
+            try {
+                instructionList.delete(instructionList.getEnd());
+            } catch (TargetLostException e) {
+                e.printStackTrace();
+            }
+            retargetStaticPuts(classGen, instructionList);
+        });
         InstructionFactory instructionFactory = new InstructionFactory(classGen, constantPoolGen);
         String className = classGen.getClassName();
         appendFieldsInstructions(instructionList, instructionFactory, className);
@@ -26,7 +42,7 @@ public class TransformUtils {
         methodGen.stripAttributes(true);
         methodGen.setMaxLocals();
         methodGen.setMaxStack();
-        classGen.addMethod(methodGen.getMethod());
+        classGen.replaceMethod(methodGen.getMethod(), methodGen.getMethod());
     }
 
     private static void addClassFields(ClassGen classGen, ConstantPoolGen constantPoolGen) {
@@ -40,6 +56,19 @@ public class TransformUtils {
                                         constantPoolGen);
         classGen.addField(threadCount.getField());
         classGen.addField(service.getField());
+    }
+
+    private static void retargetStaticPuts(ClassGen classGen, InstructionList instructionList) {
+        int classNameIndex = classGen.getClassNameIndex();
+        Arrays.stream(instructionList.getInstructionHandles())
+                .filter(handle -> handle.getInstruction() instanceof PUTSTATIC)
+                .forEach(handle -> retargetSingleHandle(classGen.getConstantPool(), handle, classNameIndex));
+    }
+
+    private static void retargetSingleHandle(ConstantPoolGen constantPool, InstructionHandle handle, int classNameIndex) {
+        PUTSTATIC staticPut = (PUTSTATIC) handle.getInstruction();
+        ConstantFieldref constant = (ConstantFieldref) constantPool.getConstant(staticPut.getIndex());
+        constant.setClassIndex(classNameIndex);
     }
 
     private static void appendFieldsInstructions(InstructionList instructionList,
@@ -200,6 +229,21 @@ public class TransformUtils {
             }
         }
         return subTaskInstructionList;
+    }
+
+    private List<LocalVariableGen> getVariablesToCopy(MethodGen methodGen, InstructionList subTaskInstructionList) {
+        List<Integer> variableIndexes = getVariableIndexes(subTaskInstructionList);
+        return Arrays.stream(methodGen.getLocalVariables())
+                .filter(variable -> variableIndexes.contains(variable.getIndex()))
+                .collect(Collectors.toList());
+    }
+
+    private List<Integer> getVariableIndexes(InstructionList subTaskInstructionList) {
+        return Arrays.stream(subTaskInstructionList.getInstructionHandles())
+                .filter(handle -> handle.getInstruction() instanceof LoadInstruction)
+                .map(LoadInstruction.class::cast)
+                .map(LoadInstruction::getIndex)
+                .collect(Collectors.toList());
     }
 
     private static void updateBranchInstructions(InstructionList instructions) {
