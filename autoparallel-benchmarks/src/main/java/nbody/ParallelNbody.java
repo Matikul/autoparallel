@@ -1,5 +1,7 @@
 package nbody;
 
+import util.DataInitializer;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -8,33 +10,27 @@ import java.util.concurrent.Executors;
 
 public class ParallelNbody {
 
-    public final Body[] bodies;
+    private static final Body[] bodies = DataInitializer.initBodiesFromFile();
+    private static Body[] beginningState;
 
     private static final double dt = 0.001;
     private static final int NUM_THREADS = Runtime.getRuntime().availableProcessors();
 
-    public ParallelNbody(Body[] bodies) {
-        this.bodies = bodies;
+    public static Body[] getBodies() {
+        return bodies;
     }
 
-    public void simulate(int steps) {
+    public static void simulate(int steps) {
         for (int i = 0; i < steps; i++) {
             moveBodies();
         }
     }
 
-    public Body[] getBodies() {
-        return bodies;
-    }
-
-    private void moveBodies() {
+    private static void moveBodies() {
         ExecutorService service = Executors.newFixedThreadPool(NUM_THREADS);
         List<Callable<Integer>> tasks = new LinkedList<>();
         int dataSize = bodies.length;
-        Body[] beginningState = new Body[dataSize];//we need deep copy
-        for (int i = 0; i < dataSize; i++) {
-            beginningState[i] = new Body(bodies[i]);
-        }
+        refreshBeginningState(dataSize);
         for (int i = 0; i < NUM_THREADS; i++) {
             int start = i * (dataSize / NUM_THREADS);
             int stop = (i + 1) * (dataSize / NUM_THREADS) - 1;
@@ -42,7 +38,7 @@ public class ParallelNbody {
                 stop = dataSize - 1;
             }
             int finalStop = stop;
-            tasks.add(() -> partialUpdate(start, finalStop, beginningState));
+            tasks.add(() -> partialUpdate(start, finalStop));
         }
         try {
             service.invokeAll(tasks);
@@ -52,15 +48,22 @@ public class ParallelNbody {
         service.shutdown();
     }
 
-    private int partialUpdate(int start, int stop, Body[] beginningState) {
+    private static void refreshBeginningState(int dataSize) {
+        beginningState = new Body[dataSize];//we need deep copy
+        for (int i = 0; i < dataSize; i++) {
+            beginningState[i] = new Body(bodies[i]);
+        }
+    }
+
+    private static int partialUpdate(int start, int stop) {
         for (int i = start; i <= stop; i++) {
             Body body = bodies[i];
-            updateState(body, beginningState);
+            updateState(body);
         }
         return 0;
     }
 
-    private void updateState(Body body, Body[] beginningState) {
+    private static void updateState(Body body) {
         double netForceX = 0.0;
         double netForceY = 0.0;
         for (Body otherBody : beginningState) {

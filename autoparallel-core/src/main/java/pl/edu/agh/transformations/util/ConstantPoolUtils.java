@@ -4,6 +4,7 @@ import org.apache.bcel.classfile.*;
 import org.apache.bcel.generic.ClassGen;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 class ConstantPoolUtils {
 
@@ -16,7 +17,7 @@ class ConstantPoolUtils {
                 .findAny()
                 .orElseThrow(() -> new IllegalStateException("Wrong state - constant " + constantName + " cannot be found."));
         for (int i = 1; i < constantPool.getConstantPool().length; i++) {
-            if (constantPool.getConstantPool()[i].equals(numThreadsField)) {
+            if (Objects.equals(constantPool.getConstantPool()[i], numThreadsField)) {
                 return i;
             }
         }
@@ -37,7 +38,7 @@ class ConstantPoolUtils {
                 .findAny()
                 .orElseThrow(() -> new IllegalStateException("No subTask method found."));
         for (int i = 1; i < constantPool.getConstantPool().length; i++) {
-            if (constantPool.getConstantPool()[i].equals(subTaskMethod)) {
+            if (Objects.equals(constantPool.getConstantPool()[i], subTaskMethod)) {
                 return i;
             }
         }

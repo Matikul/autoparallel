@@ -153,7 +153,12 @@ public class LoopUtils {
 
     private static void adjustLocalVariableTable(MethodGen methodGen) {
         InstructionHandle[] instructionHandles = methodGen.getInstructionList().getInstructionHandles();
+        List<Integer> indexes = Arrays.stream(instructionHandles)
+                .filter(handle -> handle.getInstruction() instanceof LocalVariableInstruction)
+                .map(handle -> ((LocalVariableInstruction) handle.getInstruction()).getIndex())
+                .collect(Collectors.toList());
         Arrays.stream(methodGen.getLocalVariables())
+                .filter(localVariableGen -> indexes.contains(localVariableGen.getIndex()))
                 .forEach(localVariableGen -> adjustLength(localVariableGen, instructionHandles));
     }
 

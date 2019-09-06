@@ -8,6 +8,7 @@ import org.apache.bcel.generic.ClassGen;
 import org.apache.bcel.generic.MethodGen;
 import org.apache.bcel.generic.TargetLostException;
 import pl.edu.agh.transformations.util.AnonymousClassUtils;
+import pl.edu.agh.transformations.util.MethodUtils;
 import pl.edu.agh.transformations.util.TransformUtils;
 
 import java.io.FileOutputStream;
@@ -23,6 +24,7 @@ public class BytecodeModifier {
     public void modifyBytecode(String classPath, String className, int methodPosition) throws IOException, TargetLostException {
         JavaClass analyzedClass = new ClassParser(classPath + "\\" + className + CLASS_SUFFIX).parse();
         ClassGen modifiedClass = getModifiedClass(className, analyzedClass);
+        copyFields(analyzedClass, modifiedClass);
         copyMethods(analyzedClass, modifiedClass);
 
         Method transformedMethod = modifiedClass.getMethodAt(methodPosition);
@@ -30,26 +32,17 @@ public class BytecodeModifier {
 
         TransformUtils.addThreadPool(modifiedClass);
         TransformUtils.addRangeFields(modifiedClass);
+        TransformUtils.addExecutorServiceInit(modifiedClass, methodGen);
         TransformUtils.addTaskPool(modifiedClass, methodGen);
         TransformUtils.addFutureResultsList(modifiedClass, methodGen);
         TransformUtils.copyLoopToMethod(modifiedClass, methodGen);
         TransformUtils.changeLoopLimitToNumberOfThreads(modifiedClass, methodGen);
         TransformUtils.emptyMethodLoop(modifiedClass, methodGen);
         TransformUtils.setNewLoopBody(modifiedClass, methodGen);
-//        saveModifiedClass(classPath, className, modifiedClass);
-
-//        JavaClass parallelizedClass = new ClassParser(classPath + "\\" + className + MODIFICATION_SUFFIX + CLASS_SUFFIX).parse();
-//        modifiedClass = new ClassGen(parallelizedClass);
-        //TODO VERY unsafe method retrieval
-//        transformedMethod = modifiedClass.getMethodAt(methodPosition + 1);
-//        methodGen = new MethodGen(transformedMethod, modifiedClass.getClassName(), modifiedClass.getConstantPool());
         AnonymousClassUtils.addCallableCall(modifiedClass, classPath);
 
         analyzedClass = new ClassParser(classPath + "\\" + className + MODIFICATION_SUFFIX + CLASS_SUFFIX).parse();
         modifiedClass = new ClassGen(analyzedClass);
-        methodGen = new MethodGen(modifiedClass.getMethodAt(methodPosition + 1), modifiedClass.getClassName(), modifiedClass.getConstantPool());
-
-//        ExecutorUtils.addExecutorInvocation(modifiedClass, methodGen);
 
         saveModifiedClass(classPath, className, modifiedClass);
     }
@@ -67,6 +60,13 @@ public class BytecodeModifier {
     private void copyMethods(JavaClass oldClass, ClassGen newClass) {
         Arrays.stream(oldClass.getMethods())
                 .forEach(newClass::addMethod);
+        Arrays.stream(newClass.getMethods())
+                .forEach(method -> MethodUtils.switchConstantRefsToNewClass(newClass, method));
+    }
+
+    private void copyFields(JavaClass oldClass, ClassGen newClass) {
+        Arrays.stream(oldClass.getFields())
+                .forEach(newClass::addField);
     }
 
     private void saveModifiedClass(String classPath, String className, ClassGen classGen) {

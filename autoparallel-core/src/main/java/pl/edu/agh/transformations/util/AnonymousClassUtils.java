@@ -11,6 +11,8 @@ import java.util.Arrays;
 public class AnonymousClassUtils {
 
     public static void addCallableCall(ClassGen classGen, String classPath) throws IOException, TargetLostException {
+        redumpClassGen(classGen, classPath);
+
         InnerClassData innerClassData = addAnonymousClassConstants(classGen);
         redumpClassGen(classGen, classPath);
 
@@ -21,12 +23,12 @@ public class AnonymousClassUtils {
 
         analyzedClass = new ClassParser(classPath + "\\" + classGen.getClassName() + ".class").parse();
         classGen = new ClassGen(analyzedClass);
-        //TODO VERY BAD getMethodAt!!!!:
-        MethodGen methodGen = new MethodGen(classGen.getMethodAt(2), classGen.getClassName(), classGen.getConstantPool());
+//        MethodGen methodGen = new MethodGen(MethodUtils.findMethodByNameOrThrow(classGen, "main").getMethod(), classGen.getClassName(), classGen.getConstantPool());
+        MethodGen methodGen = new MethodGen(MethodUtils.findMethodByNameOrThrow(classGen, "moveBodies").getMethod(), classGen.getClassName(), classGen.getConstantPool());
 
         InstructionList allMethodInstructions = methodGen.getInstructionList();
         InstructionHandle[] forLoop = LoopUtils.getForLoop(methodGen);
-        removeSubtaskCall(allMethodInstructions, forLoop);
+//        removeSubtaskCall(allMethodInstructions, forLoop);
         forLoop = LoopUtils.getForLoop(methodGen);
         InstructionHandle lastLoopBodyHandle = forLoop[forLoop.length - 3];
 
@@ -65,11 +67,11 @@ public class AnonymousClassUtils {
                                                                   Const.INVOKEINTERFACE));
         //STORE in partialResults
         int resultsIndex = LocalVariableUtils.findLocalVariableByName(Constants.RESULTS_POOL_NAME, localVariableTable).getIndex();
-//        invokeInstructions.append(new ASTORE(resultsIndex));
-        invokeInstructions.append(new POP());
+        invokeInstructions.append(new ASTORE(resultsIndex));
+//        invokeInstructions.append(new POP());
 
         //Call get to obtain results
-//        invokeInstructions.append()
+//        invokeInstructions.append();
 
         //Add shutdown
         invokeInstructions.append(new GETSTATIC(executorIndex));
