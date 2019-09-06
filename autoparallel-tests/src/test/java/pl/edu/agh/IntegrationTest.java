@@ -11,7 +11,7 @@ import static org.junit.Assert.assertEquals;
 
 public class IntegrationTest {
 
-    private static final String TEST_CLASS_LOCATION = "src/test/resources";
+    private static final String TEST_CLASS_LOCATION = "src/test/resources/nbody";
     private static final String TEST_CLASS_NAME = "IntegrationTestClass";
 
     private static final int MODIFIED_METHOD_POSITION = 1; //main() method position
@@ -42,7 +42,7 @@ public class IntegrationTest {
     @SuppressWarnings("Duplicates")
     public void test() throws IOException, TargetLostException {
 //        modifier.modifyBytecode(TEST_CLASS_LOCATION, TEST_CLASS_NAME, MODIFIED_METHOD_POSITION);
-        modifier.modifyBytecode(TEST_CLASS_LOCATION, TEST_CLASS_NAME, 4);//MOVE BODIES METHOD
+        modifier.modifyBytecode(TEST_CLASS_LOCATION, TEST_CLASS_NAME, 3);//MOVE BODIES METHOD
         Runtime runtime = Runtime.getRuntime();
         String command = System.getProperty("java.home") + "\\bin\\java -cp " + TEST_CLASS_LOCATION + " " + TEST_CLASS_NAME + BytecodeModifier.MODIFICATION_SUFFIX;
         try {
