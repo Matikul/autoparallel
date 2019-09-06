@@ -32,29 +32,17 @@ public class BytecodeModifier {
 
         TransformUtils.addThreadPool(modifiedClass);
         TransformUtils.addRangeFields(modifiedClass);
+        TransformUtils.addExecutorServiceInit(modifiedClass, methodGen);
         TransformUtils.addTaskPool(modifiedClass, methodGen);
         TransformUtils.addFutureResultsList(modifiedClass, methodGen);
         TransformUtils.copyLoopToMethod(modifiedClass, methodGen);
-//        TransformUtils.changeLoopLimitToNumberOfThreads(modifiedClass, methodGen);//TODO DEBUG
+        TransformUtils.changeLoopLimitToNumberOfThreads(modifiedClass, methodGen);
+        TransformUtils.emptyMethodLoop(modifiedClass, methodGen);
+        TransformUtils.setNewLoopBody(modifiedClass, methodGen);
+        AnonymousClassUtils.addCallableCall(modifiedClass, classPath);
 
-
-//        TransformUtils.emptyMethodLoop(modifiedClass, methodGen);//TODO DEBUG
-//        TransformUtils.setNewLoopBody(modifiedClass, methodGen);//TODO DEBUG
-
-
-
-//        saveModifiedClass(classPath, className, modifiedClass);
-
-//        JavaClass parallelizedClass = new ClassParser(classPath + "\\" + className + MODIFICATION_SUFFIX + CLASS_SUFFIX).parse();
-//        modifiedClass = new ClassGen(parallelizedClass);
-        //TODO VERY unsafe method retrieval
-//        transformedMethod = modifiedClass.getMethodAt(methodPosition + 1);
-//        methodGen = new MethodGen(transformedMethod, modifiedClass.getClassName(), modifiedClass.getConstantPool());
-
-//        AnonymousClassUtils.addCallableCall(modifiedClass, classPath);//TODO DEBUG
-
-//        analyzedClass = new ClassParser(classPath + "\\" + className + MODIFICATION_SUFFIX + CLASS_SUFFIX).parse();//TODO DEBUG
-//        modifiedClass = new ClassGen(analyzedClass);//TODO DEBUG
+        analyzedClass = new ClassParser(classPath + "\\" + className + MODIFICATION_SUFFIX + CLASS_SUFFIX).parse();
+        modifiedClass = new ClassGen(analyzedClass);
 
         saveModifiedClass(classPath, className, modifiedClass);
     }

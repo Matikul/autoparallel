@@ -11,6 +11,8 @@ import java.util.Arrays;
 public class AnonymousClassUtils {
 
     public static void addCallableCall(ClassGen classGen, String classPath) throws IOException, TargetLostException {
+        redumpClassGen(classGen, classPath);
+
         InnerClassData innerClassData = addAnonymousClassConstants(classGen);
         redumpClassGen(classGen, classPath);
 
@@ -26,7 +28,7 @@ public class AnonymousClassUtils {
 
         InstructionList allMethodInstructions = methodGen.getInstructionList();
         InstructionHandle[] forLoop = LoopUtils.getForLoop(methodGen);
-        removeSubtaskCall(allMethodInstructions, forLoop);
+//        removeSubtaskCall(allMethodInstructions, forLoop);
         forLoop = LoopUtils.getForLoop(methodGen);
         InstructionHandle lastLoopBodyHandle = forLoop[forLoop.length - 3];
 
@@ -65,8 +67,8 @@ public class AnonymousClassUtils {
                                                                   Const.INVOKEINTERFACE));
         //STORE in partialResults
         int resultsIndex = LocalVariableUtils.findLocalVariableByName(Constants.RESULTS_POOL_NAME, localVariableTable).getIndex();
-//        invokeInstructions.append(new ASTORE(resultsIndex));
-        invokeInstructions.append(new POP());
+        invokeInstructions.append(new ASTORE(resultsIndex));
+//        invokeInstructions.append(new POP());
 
         //Call get to obtain results
 //        invokeInstructions.append();

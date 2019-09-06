@@ -6,7 +6,7 @@ import java.util.Arrays;
 
 class InstructionUtils {
 
-    private static final short DATA_SIZE = 16;//TODO HARDCODED, AS SHORT - need to read it somehow/get by parameter
+    private static final short DATA_SIZE = 1000;//TODO HARDCODED, AS SHORT - would be nicer to get it by param from analyzer
 
     static InstructionHandle findByInstruction(Instruction instruction, InstructionHandle[] instructionHandles) {
         return Arrays.stream(instructionHandles)
