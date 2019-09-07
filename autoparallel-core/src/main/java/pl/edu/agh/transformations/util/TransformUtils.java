@@ -328,7 +328,7 @@ public class TransformUtils {
         classGen.replaceMethod(methodGen.getMethod(), methodGen.getMethod());
     }
 
-    public static void setNewLoopBody(ClassGen modifiedClass, MethodGen methodGen) {
+    public static void setNewLoopBody(ClassGen modifiedClass, MethodGen methodGen, short dataSize) {
         InstructionList allInstructionsList = methodGen.getInstructionList();
         InstructionHandle[] loopHandles = LoopUtils.getForLoop(methodGen);
         InstructionHandle firstLoopInstruction = loopHandles[0];
@@ -342,9 +342,9 @@ public class TransformUtils {
                                    Type.INT,
                                    firstLoopInstruction,
                                    lastLoopInstruction);
-        InstructionList startInitInstructions = InstructionUtils.getStartInitInstructions(modifiedClass, methodGen);
+        InstructionList startInitInstructions = InstructionUtils.getStartInitInstructions(modifiedClass, methodGen, dataSize);
         InstructionHandle endOfStartInit = startInitInstructions.getEnd();
-        InstructionList endInitInstructions = InstructionUtils.getEndInitInstructions(modifiedClass, methodGen);
+        InstructionList endInitInstructions = InstructionUtils.getEndInitInstructions(modifiedClass, methodGen, dataSize);
         allInstructionsList.append(lastInstructionBeforeLoopBody, startInitInstructions);
         allInstructionsList.append(endOfStartInit, endInitInstructions);
         methodGen.setMaxStack();

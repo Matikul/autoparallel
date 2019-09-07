@@ -21,7 +21,7 @@ public class BytecodeModifier {
     private static final String CLASS_SUFFIX = ".class";
     private static final String JAVA_SUFFIX = ".java";
 
-    public void modifyBytecode(String classPath, String className, int methodPosition) throws IOException, TargetLostException {
+    public void modifyBytecode(String classPath, String className, int methodPosition, short dataSize) throws IOException, TargetLostException {
         JavaClass analyzedClass = new ClassParser(classPath + "\\" + className + CLASS_SUFFIX).parse();
         ClassGen modifiedClass = getModifiedClass(className, analyzedClass);
         copyFields(analyzedClass, modifiedClass);
@@ -38,7 +38,7 @@ public class BytecodeModifier {
         TransformUtils.copyLoopToMethod(modifiedClass, methodGen);
         TransformUtils.changeLoopLimitToNumberOfThreads(modifiedClass, methodGen);
         TransformUtils.emptyMethodLoop(modifiedClass, methodGen);
-        TransformUtils.setNewLoopBody(modifiedClass, methodGen);
+        TransformUtils.setNewLoopBody(modifiedClass, methodGen, dataSize);
         AnonymousClassUtils.addCallableCall(modifiedClass, classPath);
 
         analyzedClass = new ClassParser(classPath + "\\" + className + MODIFICATION_SUFFIX + CLASS_SUFFIX).parse();

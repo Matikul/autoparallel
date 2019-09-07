@@ -26,7 +26,7 @@ public class IntegrationTest {
     @Test
     @SuppressWarnings("Duplicates")
     public void modifiedClassRunTest() throws IOException, TargetLostException {
-        modifier.modifyBytecode(TEST_CLASS_LOCATION, TEST_CLASS_NAME, MODIFIED_METHOD_POSITION);
+        modifier.modifyBytecode(TEST_CLASS_LOCATION, TEST_CLASS_NAME, MODIFIED_METHOD_POSITION, (short) 1000);
         Runtime runtime = Runtime.getRuntime();
         String command = System.getProperty("java.home") + "\\bin\\java -cp " + TEST_CLASS_LOCATION + " " + TEST_CLASS_NAME + BytecodeModifier.MODIFICATION_SUFFIX;
         try {
@@ -42,7 +42,7 @@ public class IntegrationTest {
     @SuppressWarnings("Duplicates")
     public void test() throws IOException, TargetLostException {
 //        modifier.modifyBytecode(TEST_CLASS_LOCATION, TEST_CLASS_NAME, MODIFIED_METHOD_POSITION);
-        modifier.modifyBytecode(TEST_CLASS_LOCATION, TEST_CLASS_NAME, 3);//MOVE BODIES METHOD
+        modifier.modifyBytecode(TEST_CLASS_LOCATION, TEST_CLASS_NAME, 3, (short) 1000);//MOVE BODIES METHOD
         Runtime runtime = Runtime.getRuntime();
         String command = System.getProperty("java.home") + "\\bin\\java -cp " + TEST_CLASS_LOCATION + " " + TEST_CLASS_NAME + BytecodeModifier.MODIFICATION_SUFFIX;
         try {
