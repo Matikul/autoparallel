@@ -15,6 +15,7 @@ public class ParallelNbody {
 
     private static final double dt = 0.001;
     private static final int NUM_THREADS = Runtime.getRuntime().availableProcessors();
+    private static ExecutorService SERVICE;
 
     public static Body[] getBodies() {
         return bodies;
@@ -27,7 +28,7 @@ public class ParallelNbody {
     }
 
     private static void moveBodies() {
-        ExecutorService service = Executors.newFixedThreadPool(NUM_THREADS);
+        SERVICE = Executors.newFixedThreadPool(NUM_THREADS);
         List<Callable<Integer>> tasks = new LinkedList<>();
         int dataSize = bodies.length;
         refreshBeginningState(dataSize);
@@ -41,11 +42,11 @@ public class ParallelNbody {
             tasks.add(() -> partialUpdate(start, finalStop));
         }
         try {
-            service.invokeAll(tasks);
+            SERVICE.invokeAll(tasks);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        service.shutdown();
+        SERVICE.shutdown();
     }
 
     private static void refreshBeginningState(int dataSize) {

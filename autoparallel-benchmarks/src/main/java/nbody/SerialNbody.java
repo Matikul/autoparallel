@@ -6,7 +6,6 @@ public class SerialNbody {
 
     private static final Body[] bodies = DataInitializer.initBodiesFromFile();
     private static Body[] beginningState;
-
     private static final double dt = 0.001;
 
     public static Body[] getBodies() {
@@ -21,14 +20,15 @@ public class SerialNbody {
 
     private static void moveBodies() {
         int dataSize = bodies.length;
-        refreshBeginningState(dataSize);
+        refreshBeginningState();
         for (int i = 0; i < dataSize; i++) {
             Body body = bodies[i];
             updateState(body);
         }
     }
 
-    private static void refreshBeginningState(int dataSize) {
+    private static void refreshBeginningState() {
+        int dataSize = bodies.length;
         beginningState = new Body[dataSize];
         for (int i = 0; i < dataSize; i++) {
             beginningState[i] = new Body(bodies[i]);

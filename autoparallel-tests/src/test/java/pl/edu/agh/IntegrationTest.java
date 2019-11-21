@@ -11,10 +11,13 @@ import static org.junit.Assert.assertEquals;
 
 public class IntegrationTest {
 
-    private static final String TEST_CLASS_LOCATION = "src/test/resources/nbody";
+    private static final String TEST_CLASS_LOCATION = "src/test/resources";
     private static final String TEST_CLASS_NAME = "IntegrationTestClass";
 
-    private static final int MODIFIED_METHOD_POSITION = 1; //main() method position
+//    private static final String TEST_CLASS_LOCATION = "../autoparallel-benchmarks/target/classes/parallelized/nbody/";
+//    private static final String TEST_CLASS_NAME = "SerialNbody";
+
+    private static final int MODIFIED_METHOD_POSITION = 1;
 
     private static BytecodeModifier modifier;
 

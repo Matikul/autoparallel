@@ -86,31 +86,18 @@ public class TransformUtils {
         instructionList.append(instructionFactory.createPutStatic(className,
                                                                   Constants.NUMBER_OF_THREADS_CONSTANT_NAME,
                                                                   Type.INT));
-        instructionList.append(instructionFactory.createGetStatic(className,
-                                                                  Constants.NUMBER_OF_THREADS_CONSTANT_NAME,
-                                                                  Type.INT));
-        instructionList.append(instructionFactory.createInvoke("java.util.concurrent.Executors",
-                                                               "newFixedThreadPool",
-                                                               Type.getType(ExecutorService.class),
-                                                               new Type[]{Type.INT},
-                                                               Const.INVOKESTATIC));
-        instructionList.append(instructionFactory.createPutStatic(className,
-                                                                  Constants.EXECUTOR_SERVICE_CONSTANT_NAME,
-                                                                  Type.getType(ExecutorService.class)));
+//        instructionList.append(instructionFactory.createGetStatic(className,
+//                                                                  Constants.NUMBER_OF_THREADS_CONSTANT_NAME,
+//                                                                  Type.INT));
+//        instructionList.append(instructionFactory.createInvoke("java.util.concurrent.Executors",
+//                                                               "newFixedThreadPool",
+//                                                               Type.getType(ExecutorService.class),
+//                                                               new Type[]{Type.INT},
+//                                                               Const.INVOKESTATIC));
+//        instructionList.append(instructionFactory.createPutStatic(className,
+//                                                                  Constants.EXECUTOR_SERVICE_CONSTANT_NAME,
+//                                                                  Type.getType(ExecutorService.class)));
         instructionList.append(InstructionFactory.createReturn(Type.VOID));
-    }
-
-    public static void addRangeFields(ClassGen classGen) {
-        FieldGen startRangeField = new FieldGen(Const.ACC_PRIVATE | Const.ACC_STATIC,
-                                                Type.INT,
-                                                Constants.START_RANGE_CONSTANT_NAME,
-                                                classGen.getConstantPool());
-        FieldGen endRangeField = new FieldGen(Const.ACC_PRIVATE | Const.ACC_STATIC,
-                                              Type.INT,
-                                              Constants.END_RANGE_CONSTANT_NAME,
-                                              classGen.getConstantPool());
-        classGen.addField(startRangeField.getField());
-        classGen.addField(endRangeField.getField());
     }
 
     public static void addExecutorServiceInit(ClassGen classGen, MethodGen methodGen) {

@@ -11,6 +11,6 @@ class LocalVariableUtils {
         return Arrays.stream(localVariableTable.getLocalVariableTable())
                 .filter(var -> var.getName().equals(name))
                 .findAny()
-                .orElseThrow(() -> new IllegalStateException("Variable " + name + "not found by name."));
+                .orElseThrow(() -> new IllegalStateException("Variable " + name + " not found by name."));
     }
 }
